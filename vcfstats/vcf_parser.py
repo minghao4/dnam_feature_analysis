@@ -72,7 +72,7 @@ class VcfParser:
         self.cxt_out = None
 
     def __read_curr_file(self, vcf_file_path):
-        self.curr_file = read_csv(vcf_file_path, sep = '\t', index_col = None)
+        self.curr_file = read_csv(vcf_file_path, sep = '\t', index_col = None, engine = 'python')
         self.curr_file = self.curr_file.drop(columns = ["N5-CONTEXT", "FORMAT"])
 
     def __process_curr_file(self, curr_cultiv_idx):
@@ -151,10 +151,15 @@ class VcfParser:
 
             self.cultiv_names.append(filename.split("_")[0])
 
-        for curr_cultiv_idx, filename in enumerate(folder):
+        curr_cultiv_idx = 0
+        for filename in folder:
             vcf_file_path = vcf_folder_path + "/" + filename
+            if os.path.isdir(vcf_file_path):
+                continue
+
             self.__read_curr_file(vcf_file_path)
             self.__process_curr_file(curr_cultiv_idx)
+            curr_cultiv_idx += 1
 
         output_folder_path = vcf_folder_path + "/output"
         if not output_folder:
