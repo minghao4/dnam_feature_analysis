@@ -33,13 +33,18 @@ def variant_dict_value(gt_status, alt_allele, alt_freq):
     cultiv_allele1 = alt_allele
     cultiv_allele2 = alt_allele
 
-    if gt_status == 0:
+    if gt_status == 1:
         cultiv_allele1 = "-"
 
-    var_dict_entry = [cultiv_allele1, cultiv_allele2, alt_freq * 2]
+    var_dict_entry = [cultiv_allele1, cultiv_allele2, float(alt_freq) * 2]
     return var_dict_entry
 
 def matrix_init(num_cultiv):
+    """
+    Initiates a 2d array for the entry.
+    Overridden for a different format.
+    """
+
     blank = "-"
     m = [blank] * num_cultiv
 
@@ -78,7 +83,12 @@ class VcfParser:
 
             # Genotype, reference allele, alternate allele, and alt_freq,
             # respectively.
-            new_entry = variant_dict_value(gt_status(gt_sp_af[0]), row[3], gt_sp_af[2])
+            new_entry = variant_dict_value(
+                            gt_status(gt_sp_af[0]),
+                            row[3],
+                            gt_sp_af[2]
+
+                        )
 
             if self.variant_dict.__contains__(scaff_pos):
                 self.variant_dict.get(scaff_pos)[curr_cultiv_idx] = new_entry
@@ -88,7 +98,7 @@ class VcfParser:
                 var_dict_entry[curr_cultiv_idx] = new_entry
 
                 self.variant_dict.__setitem__(scaff_pos, var_dict_entry)
-                self.context_dict.__setitem__(scaff_pos, row[4])
+                self.context_dict.__setitem__(scaff_pos, [row[4]])
 
     def __set_var_out(self):
         header = set_header(self.cultiv_names)
@@ -104,8 +114,8 @@ class VcfParser:
                 data_row.append(entry[1])
                 var_count += float(entry[2])
 
-            data_row.append(var_count)
-            self.var_out.loc[i].append(var_count)
+            data_row.append(var_count / 24)
+            self.var_out.loc[i] = data_row
             i += 1
 
     def __set_cxt_out(self):
@@ -129,7 +139,9 @@ class VcfParser:
         if vcf_folder_path.endswith("/"):
             vcf_folder_path = vcf_folder_path[:-1]
 
-        for curr_cultiv_idx, filename in enumerate(sorted(os.listdir(vcf_folder_path))):
+        folder = sorted(os.listdir(vcf_folder_path))
+
+        for filename in folder:
             vcf_file_path = vcf_folder_path + "/" + filename
             if os.path.isdir(vcf_file_path):
                 if filename == "output":
@@ -138,6 +150,9 @@ class VcfParser:
                 continue
 
             self.cultiv_names.append(filename.split("_")[0])
+
+        for curr_cultiv_idx, filename in enumerate(folder):
+            vcf_file_path = vcf_folder_path + "/" + filename
             self.__read_curr_file(vcf_file_path)
             self.__process_curr_file(curr_cultiv_idx)
 
