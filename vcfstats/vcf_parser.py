@@ -24,13 +24,12 @@ the biscuit VCF outputs require manual preprocessing prior to input into this
 tool.
 """
 
-import numpy as np
 import os
-import sys
+from subprocess import run, check_output
+
 from pandas import DataFrame as df
 from pandas import read_csv
-from subprocess import run, check_output
-import subprocess
+
 
 
 # General functions.
@@ -59,7 +58,7 @@ def var_dict_value(gt_status, alt_allele, alt_freq):
     Defines and returns the variant dictionary entry array for a single
     cultivar.
 
-    Integer, String, Float -> List[Float, Float]
+    Integer, String, Float -> List[Float]
     """
 
     cultiv_allele_a = 0.0
@@ -82,7 +81,7 @@ def set_var_matrix(num_cultiv):
     Initializes and returns the variant dictionary entry array for all
     cultivars.
 
-    Integer -> List[List[Float, Float]]
+    Integer -> List[List[Float]]
     """
 
     m = [0.0] * num_cultiv * 2
@@ -99,6 +98,7 @@ def set_var_header(cultiv_names):
     List[String] -> List[String]
     """
 
+    # TODO: make the header variable pass through from the UI
     header = ["#Scaffold_Position"]
     for cultivar in cultiv_names:
         header.append(cultivar + "_A1")
@@ -124,47 +124,11 @@ def shell_sort_sep(dir_path, file_name):
               " && tail -n +2 " + old_filepath + \
               " | sort -k1,1V) > " + sorted_filepath)
 
-
     check_output(cmd, shell = True)
 
     # Removing the original and renaming the sorted file.
-    try:
-        cmd = str("rm " + old_filepath + " && mv " + sorted_filepath + " " + old_filepath)
-        run(cmd, shell = True, check = True)
-
-    except subprocess.CalledProcessError as exc:
-        print("Status: FAIL\n", exc.returncode, "\n", exc.output)
-
-
-    # Removing the sorted file.
-    # check_output(str("rm " + old_filepath), shell = True)
-
-    # # Separating #Scaffold_Position using awk and writing under original filename
-    # try:
-    #     paste_cmd = [
-    #         "paste", "<(awk", "'{split($1,scaff_pos,\"_\");",
-    #         "print scaff_pos[1]\"\t\"scaff_pos[2]}'",
-    #         str(sorted_filepath + ")"),
-    #         "<(cut", "-f", "2-",
-    #         str(sorted_filepath + ")"),
-    #         ">", old_filepath,
-
-    #     ]
-
-    #     # str("paste <(awk '{split($1, scaff_pos, \"_\"); \
-    #     #                             print scaff_pos[1]\"\t\"scaff_pos[2]}' " + \
-    #     #                         sorted_filepath + ") " + \
-    #     #                     "<(cut -f 2- " + sorted_filepath + ") " + \
-    #     #                     "> " + old_filepath
-
-    #     #         )
-
-    #     subprocess.run(paste_cmd, shell = True, check = True)
-
-    # except subprocess.CalledProcessError as exc:
-    #     print("Status: FAIL", exc.returncode, exc.output)
-    #     sys.exit()
-
+    cmd = str("rm " + old_filepath + " && mv " + sorted_filepath + " " + old_filepath)
+    run(cmd, shell = True, check = True)
 
 
 # Class specific functions.
@@ -205,7 +169,7 @@ class VcfParser:
         """
         Initializes and sets a new dictionary entry for all variants.
 
-        VcfParser, Integer, Integer, List[Float, Float], String, List[8] ->
+        VcfParser, Integer, Integer, List[Float], String, List[Object] ->
         VcfParser
         """
 
