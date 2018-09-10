@@ -70,9 +70,9 @@ def final_pi_calc(curr_out_df, sites):
 class PiCalculator:
     def __init__(self):
         self.bin_size = 0
-        self.var_df = df()
-        self.scaff_size_df = df()
-        self.curr_out_df = df()
+        self.var_df = None
+        self.scaff_size_df = None
+        self.curr_out_df = None
 
 
     def __set_var_df(

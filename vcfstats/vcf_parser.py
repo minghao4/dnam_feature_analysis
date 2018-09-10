@@ -33,95 +33,49 @@ from pandas import read_csv
 
 ## General functions.
 
-# Given the genotype status as a string, convert it into an integer.
-# - "0/0" -> 0 (Homozygous for the reference allele)
-# - "0/1" -> 1 (Heterozygous)
-# - "1/1" -> 2 (Homozygous for the alternate allele)
-def gt_status(gt):
+# Finds the methylation level and variation frequency for a VCF row within the
+# Biscuit output VCF.
+def meth_var_dictValues(alternate_allele, variant_frequency):
     """
-    Defines and returns the genotype status.
+    Defines and returns the methylation and variant dictionary entries for a
+    single cultivar as an array.
 
-    String -> Integer
-    """
-
-    status = 0
-    if gt == "0/1":
-        status = 1
-
-    elif gt == "1/1":
-        status = 2
-
-    return status
-
-
-# Given the genotype status, alternate allele, and the alternate allele frequency,
-# return a list as a variant dictionary value.
-def var_dict_value(gt_status, alt_allele, alt_freq):
-    """
-    Defines and returns the variant dictionary entry array for a single
-    cultivar.
-
-    Integer, String, Float -> List[Float]
+    String, Float -> List[Float]
     """
 
-    cultiv_allele_a = 0.0
-    cultiv_allele_b = 0.0
+    methylation_level = 1.0
+    variation_frequency = 0.0
+    if alternate_allele != ".":
+        variation_frequency = variant_frequency
 
-    # "." as the alternate allele is exclusive to biscuit VCFs as it indicates
-    # a cytosine site. "." alt_allele means homozygous for the reference,
-    # therefore the output would be 0s for the frequency of deviation from the
-    # reference.
-    if alt_allele != ".":
+        if alternate_allele != "C" and alternate_allele != "G":
+            methylation_level = 1.0 - variant_frequency
 
-        # Heterozygous, so set allele A as the reference (0 deviation) and
-        # allele B as the alternate frequency.
-        # - For SNPs, allele B should be 1.
-        # - For bisulfite variants, allele B will be the alternate frequency as
-        #   per the information provided by the file x2.
-        #   * Allele frequency is alternate frequency divided by 2. So for SNPs
-        #     this will always be 0.5 for heterozygous, but bisulfite variants
-        #     have a range of beta values (generally 0.3 to 0.7).
-        if gt_status < 2:
-            cultiv_allele_b = float(alt_freq) * 2
-
-        # Homozygous for alternate.
-        # - For SNPs, both alleles will be 1.
-        # - For bisulfite variants, both alleles will be the alternate frequency
-        #   as per the information provided by the file.
-        else:
-            cultiv_allele_a = float(alt_freq)
-            cultiv_allele_b = float(alt_freq)
-
-    var_dict_entry = [cultiv_allele_a, cultiv_allele_b]
-    return var_dict_entry
+    return [methylation_level, variation_frequency]
 
 
-def set_var_matrix(num_cultiv):
+# Sets the output file headers for the methylation level and variation frequency
+# files.
+#   - 0 = methylation file
+#   - 1 = variation file
+def set_out_dfHeaders(cultiv_names, output):
     """
-    Initializes and returns the variant dictionary entry array for all
-    cultivars.
+    Defines and returns the header for the methylation and variation output
+    files.
 
-    Integer -> List[List[Float]]
-    """
-
-    m = [0.0] * num_cultiv * 2
-    return m
-
-
-def set_var_header(cultiv_names):
-    """
-    Defines and returns the header for the variant output file.
-
-    List[String] -> List[String]
+    List[String]m String -> List[String]
     """
 
     # TODO: make the header variable pass through from the UI
     header = ["#Scaffold_Position"]
-    for cultivar in cultiv_names:
-        header.append(cultivar + "_A1")
-        header.append(cultivar + "_A2")
+    if output == "C":
+        header += ["Context", "Reference", "Alternate"]
 
-    header.append("Allele_Frequency")
+    else:
+        header += cultiv_names
+        if output == "V":
+            header.append("Variation_Frequency")
+
     return header
 
 
@@ -153,10 +107,12 @@ def shell_sort_sep(dir_path, file_name):
 # Class specific functions.
 class VcfParser:
     def __init__(self):
-        self.variant_dict = {}
+        self.methylation_dict = {}
+        self.variation_dict = {}
         self.context_dict = {}
         self.curr_file = None
         self.cultiv_names = []
+        self.meth_out = None
         self.var_out = None
         self.cxt_out = None
 
@@ -184,74 +140,110 @@ class VcfParser:
                         )
 
 
-    def __new_dict_entries(self, a1_idx, a2_idx, new_entry, scaff_pos, row):
-        """
-        Initializes and sets a new dictionary entry for all variants.
+    def __add_new_dictEntries(
+            self,
+            newEntries_needed,
+            curr_cultivIdx,
+            new_dictEntries,
+            scaff_pos,
+            row,
 
-        VcfParser, Integer, Integer, List[Float], String, List[Object] ->
+        ):
+
+        """
+        Initializes and sets new methylation and variation dictionary entries
+        for all VCF rows.
+
+        VcfParser, String, Integer, List[Float], String, List[Object] ->
         VcfParser
         """
 
-        var_dict_entry = set_var_matrix(len(self.cultiv_names))
-        var_dict_entry[a1_idx] = new_entry[0]
-        var_dict_entry[a2_idx] = new_entry[1]
+        if newEntries_needed == "B" or newEntries_needed == "M":
+            meth_dictEntry = [0.0] * len(self.cultiv_names)
+            meth_dictEntry[curr_cultivIdx] = new_dictEntries[0]
+            self.methylation_dict.__setitem__(scaff_pos, meth_dictEntry)
 
-        self.variant_dict.__setitem__(scaff_pos, var_dict_entry)
+        if newEntries_needed == "B" or newEntries_needed == "V":
+            var_dictEntry = [0.0] * len(self.cultiv_names)
+            var_dictEntry[curr_cultivIdx] = new_dictEntries[1]
+            self.variation_dict.__setitem__(scaff_pos, var_dictEntry)
+
         self.context_dict.__setitem__(scaff_pos, [row[4], row[2], row[3]])
 
 
-    def __process_curr_file(self, curr_cultiv_idx):
+    def __process_curr_file(self, curr_cultivIdx):
         """
         Processes the currently read file within the VcfParser object.
 
         VcfParser, Integer -> VcfParser
         """
 
-        curr_cultiv_allele1_idx = curr_cultiv_idx * 2
-        curr_cultiv_allele2_idx = curr_cultiv_allele1_idx + 1
-
         for i in range(self.curr_file.shape[0]):
             row = self.curr_file.iloc[i]
             scaff_pos = row[0] + "_" + str(row[1])
-            gt_sp_af = row[5].split(":")
+            alternate_allele = row[3]
+            variant_frequency = float(row[5].split(":")[2])
 
-            new_entry = var_dict_value(
-                            gt_status(gt_sp_af[0]),
-                            row[3],
-                            gt_sp_af[2],
+            new_dictEntries = meth_var_dictValues(
+                                  alternate_allele,
+                                  variant_frequency,
 
-                        )
+                              )
 
-            if self.variant_dict.__contains__(scaff_pos):
-                self.variant_dict.get(scaff_pos)[curr_cultiv_allele1_idx] = \
-                    new_entry[0]
-                self.variant_dict.get(scaff_pos)[curr_cultiv_allele2_idx] = \
-                    new_entry[1]
+            newEntries_needed = "N"
+            if self.methylation_dict.__contains__(scaff_pos):
+                self.methylation_dict.get(scaff_pos)[curr_cultivIdx] = \
+                    new_dictEntries[0]
 
             else:
-                self.__new_dict_entries(
-                    curr_cultiv_allele1_idx,
-                    curr_cultiv_allele2_idx,
-                    new_entry,
+                newEntries_needed = "M"
+
+            if self.variation_dict.__contains__(scaff_pos):
+                self.variation_dict.get(scaff_pos)[curr_cultivIdx] = \
+                    new_dictEntries[1]
+
+            else:
+                if newEntries_needed == "M":
+                    newEntries_needed = "B"
+
+                else:
+                    newEntries_needed = "V"
+
+            if newEntries_needed != "N":
+                self.__add_new_dictEntries(
+                    newEntries_needed,
+                    curr_cultivIdx,
+                    new_dictEntries,
                     scaff_pos,
                     row,
 
                 )
 
 
+    def __set_meth_output(self):
+        """
+
+        VcfParser -> VcfParser
+        """
+
+        header = set_out_dfHeaders(self.cultiv_names, "M")
+        self.meth_out = df(data = self.methylation_dict).T.reset_index()
+        self.meth_out.columns = header
+
+
     def __set_var_output(self):
         """
-        Sets the variant output pandas DataFrame using data from the variant
+        Sets the variation output pandas DataFrame using data from the variation
         dictionary.
 
         VcfParser -> VcfParser
         """
 
-        header = set_var_header(self.cultiv_names)
-        self.var_out = df(data = self.variant_dict).T.reset_index()
+        header = set_out_dfHeaders(self.cultiv_names, "V")
+        self.var_out = df(data = self.variation_dict).T.reset_index()
         self.var_out["freq"] = 0.0
         self.var_out.columns = header
-        self.var_out.loc[:]["Allele_Frequency"] = \
+        self.var_out.loc[:]["Variation_Frequency"] = \
             self.var_out.sum(axis = 1) / len(self.cultiv_names)
 
 
@@ -263,7 +255,7 @@ class VcfParser:
         VcfParser -> VcfParser
         """
 
-        header = ["#Scaffold_Position", "Context", "Reference", "Alternate"]
+        header = set_out_dfHeaders(self.cultiv_names, "C")
         self.cxt_out = df(data = self.context_dict).T.reset_index()
         self.cxt_out.columns = header
 
@@ -275,17 +267,23 @@ class VcfParser:
         VcfParser, String -> VcfParser
         """
 
+        self.__set_meth_output()
         self.__set_var_output()
         self.__set_cxt_output()
 
-        var_file_name = "master_variants.tsv"
+
+        meth_file_name = "methylation_levels.tsv"
+        meth_file_path = output_dir_path + "/" + meth_file_name
+        var_file_name = "variant_frequency.tsv"
         var_file_path = output_dir_path + "/" + var_file_name
         cxt_file_name = "variant_context.tsv"
         cxt_file_path = output_dir_path + "/" + cxt_file_name
 
+        self.meth_out.to_csv(meth_file_path, sep = '\t', index = False)
         self.var_out.to_csv(var_file_path, sep = '\t', index = False)
         self.cxt_out.to_csv(cxt_file_path, sep = '\t', index = False)
 
+        shell_sort_sep(output_dir_path, meth_file_name)
         shell_sort_sep(output_dir_path, var_file_name)
         shell_sort_sep(output_dir_path, cxt_file_name)
 
@@ -314,15 +312,14 @@ class VcfParser:
 
             self.cultiv_names.append(filename.split("_")[0])
 
-        curr_cultiv_idx = 0
+        curr_cultivIdx = 1
         for filename in directory:
             vcf_file_path = vcf_dir_path + "/" + filename
             if os.path.isdir(vcf_file_path):
                 continue
 
             self.__read_curr_file(vcf_file_path)
-            self.__process_curr_file(curr_cultiv_idx)
-            curr_cultiv_idx += 1
+            self.__process_curr_file(curr_cultivIdx)
 
         output_dir_path = vcf_dir_path + "/output"
         if not output_dir_present:
