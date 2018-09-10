@@ -61,9 +61,8 @@ def final_pi_calc(curr_out_df, sites):
 
     DataFrame, Integer -> DataFrame
     """
-    print("before: ", curr_out_df.iloc[:, 1])
+
     curr_out_df.iloc[:, 1] = curr_out_df.iloc[:, 1] * 2 / sites
-    print("after: ", curr_out_df.iloc[:, 1])
     return curr_out_df
 
 
@@ -99,13 +98,16 @@ class PiCalculator:
                       )
 
 
+        scaff_pos = self.var_df.columns[0]
         self.var_df[['Scaffold', 'Position']] = \
-            self.var_df['#Scaffold_Position'].str.split('_', expand = True)
+            self.var_df[scaff_pos].str.split('_', expand = True)
 
-        self.var_df = self.var_df.drop(['#Scaffold_Position'], axis = 1)
+        # Reordering the columns
+        self.var_df = self.var_df.drop(scaff_pos, axis = 1)
         cols = self.var_df.columns.tolist()
         cols = cols[1:] + [cols[0]]
         self.var_df = self.var_df[cols]
+
         self.scaff_size_df = read_csv(scaff_sizes_file, sep = '\t')
 
 
@@ -141,36 +143,33 @@ class PiCalculator:
         """
 
         PiCalculator, Integer, String, Integer, String -> PiCalculator,
-        List[Integer]
+        List[Integer, Boolean]
         """
 
         sites = 0
         for var_idx in range(var_df_bookmark, self.var_df.shape[0]):
-            sites += 1
             var = self.var_df.loc[var_idx]
             var_scaff = var[0]
             var_pos = int(var[1])
             var_freq = float(var[2])
-            write_status = False
 
             if var_scaff == curr_scaff:
+                sites += 1
                 var_df_bookmark += 1
                 bin_idx = int(var_pos / self.bin_size)
 
                 if bin_idx < num_bin:
                     # TODO: pipe in number of cultivars
                     pi_part = float((var_freq * (1 - var_freq) * 24 / 23))
-
-                    if pi_part > 0:
-                        write_status = True
-
                     self.curr_out_df.iloc[bin_idx, 1] += pi_part
 
             else:
-                if write_status:
-                    print("Finishing touches and writing output...\n")
-                    self.__final_calc_write(curr_scaff, sites, output_dir_path)
+                print("Finishing touches and writing output for: ")
+                print(var_scaff + "\n")
+                if sites == 0:
+                    sites = sites + 1
 
+                self.__final_calc_write(curr_scaff, sites, output_dir_path)
                 break
 
         return [var_df_bookmark, sites]
@@ -203,17 +202,17 @@ class PiCalculator:
 
                                )
 
-            vdbm_s = self.__read_var_df(
-                         var_df_bookmark,
-                         scaff_name,
-                         num_bin,
-                         output_dir_path,
+            varDfBookmark_sites = self.__read_var_df(
+                                                  var_df_bookmark,
+                                                  scaff_name,
+                                                  num_bin,
+                                                  output_dir_path,
 
-                     )
+                                              )
 
-            var_df_bookmark= vdbm_s[0]
+            var_df_bookmark= varDfBookmark_sites[0]
             final_scaff = scaff_name
-            final_sites = vdbm_s[1]
+            final_sites = varDfBookmark_sites[1]
 
         # Guard against 0
         self.__final_calc_write(final_scaff, final_sites + 1, output_dir_path)
@@ -236,11 +235,18 @@ class PiCalculator:
         PiCalculator
         """
 
-        "Creating output directory if it doesn't already exist...\n"
+        paths = [var_file, scaff_sizes_file, output_dir_path]
+
+        for path in paths:
+            if path.endswith('/'):
+                path = path[:-1]
+
+
+        print("Creating output directory if it doesn't already exist...\n")
         if not os.path.isdir(output_dir_path):
             os.mkdir(output_dir_path)
 
-        "Setting variant dataframe...\n"
+        print("Setting variant dataframe...\n")
         self.__set_var_df(
             bin_width,
             var_file,
@@ -249,7 +255,7 @@ class PiCalculator:
 
         )
 
-        "Reading scaffold dataframe...\n"
+        print("Reading scaffold dataframe...\n")
         self.__read_scaff_df(header_out, output_dir_path)
 
 

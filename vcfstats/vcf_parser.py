@@ -31,16 +31,17 @@ from pandas import DataFrame as df
 from pandas import read_csv
 
 
+## General functions.
 
-# General functions.
+# Given the genotype status as a string, convert it into an integer.
+# - "0/0" -> 0 (Homozygous for the reference allele)
+# - "0/1" -> 1 (Heterozygous)
+# - "1/1" -> 2 (Homozygous for the alternate allele)
 def gt_status(gt):
     """
     Defines and returns the genotype status.
-    * 0 = Homozygous Ref
-    * 1 = Heterozygous
-    * 2 = Homozygous Variant
 
-    Integer -> Integer
+    String -> Integer
     """
 
     status = 0
@@ -53,6 +54,8 @@ def gt_status(gt):
     return status
 
 
+# Given the genotype status, alternate allele, and the alternate allele frequency,
+# return a list as a variant dictionary value.
 def var_dict_value(gt_status, alt_allele, alt_freq):
     """
     Defines and returns the variant dictionary entry array for a single
@@ -64,10 +67,27 @@ def var_dict_value(gt_status, alt_allele, alt_freq):
     cultiv_allele_a = 0.0
     cultiv_allele_b = 0.0
 
+    # "." as the alternate allele is exclusive to biscuit VCFs as it indicates
+    # a cytosine site. "." alt_allele means homozygous for the reference,
+    # therefore the output would be 0s for the frequency of deviation from the
+    # reference.
     if alt_allele != ".":
+
+        # Heterozygous, so set allele A as the reference (0 deviation) and
+        # allele B as the alternate frequency.
+        # - For SNPs, allele B should be 1.
+        # - For bisulfite variants, allele B will be the alternate frequency as
+        #   per the information provided by the file x2.
+        #   * Allele frequency is alternate frequency divided by 2. So for SNPs
+        #     this will always be 0.5 for heterozygous, but bisulfite variants
+        #     have a range of beta values (generally 0.3 to 0.7).
         if gt_status < 2:
             cultiv_allele_b = float(alt_freq) * 2
 
+        # Homozygous for alternate.
+        # - For SNPs, both alleles will be 1.
+        # - For bisulfite variants, both alleles will be the alternate frequency
+        #   as per the information provided by the file.
         else:
             cultiv_allele_a = float(alt_freq)
             cultiv_allele_b = float(alt_freq)
@@ -85,9 +105,6 @@ def set_var_matrix(num_cultiv):
     """
 
     m = [0.0] * num_cultiv * 2
-    # for i in range(num_cultiv):
-    #     m[i] = [0, 0]
-
     return m
 
 
@@ -127,7 +144,9 @@ def shell_sort_sep(dir_path, file_name):
     check_output(cmd, shell = True)
 
     # Removing the original and renaming the sorted file.
-    cmd = str("rm " + old_filepath + " && mv " + sorted_filepath + " " + old_filepath)
+    cmd = str("rm " + old_filepath + \
+        " && mv " + sorted_filepath + " " + old_filepath)
+
     run(cmd, shell = True, check = True)
 
 
