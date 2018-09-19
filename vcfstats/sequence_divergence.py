@@ -12,7 +12,7 @@ methylation sites, we are looking at the number of sites deviating from
 normal methylation status per methylation site (within a pre-defined bin size).
 
 The input parameters required are as follows:
-* Bin size [default 400]. TODO: set a default through the user interface
+* Bin size
 * Sorted variation frequency TSV as per the output from the VCF Parser.
     - Scaffold_Position
     - Variation_Frequency
@@ -41,27 +41,6 @@ start = timeit.default_timer()
 # header_out = ["#Distance", "Pi"]
 
 
-## General functions.
-
-# Initialize the numpy array for the output file.
-def set_pi_matrix(num_bin, bin_size, header, final_bin_lab):
-    """
-    Defines and returns the output pandas DataFrame for a scaffold.
-
-    Integer, Integer, List[String], Float -> DataFrame
-    """
-
-    curr_out_df = ((np.arange(num_bin * 2).reshape(num_bin, 2) + 1) *
-        (bin_size / 2)).astype(float)
-
-    curr_out_df[:, 1] *= 0
-    curr_out_df = df(curr_out_df, columns = header)
-    if curr_out_df.shape[0] > 1:
-        curr_out_df.loc[curr_out_df.shape[0] - 1][0] = final_bin_lab
-
-    return curr_out_df
-
-
 # Class specific methods.
 class PiCalculator:
     def __init__(self):
@@ -72,20 +51,12 @@ class PiCalculator:
 
 
     # Reads the input variation file as a dataframe.
-    def __set_var_df(
-            self,
-            bin_width,
-            var_file,
-            scaff_sizes_file,
-            output_dir_path,
-
-        ):
-
+    def __set_in_df(self, bin_width, var_file, scaff_sizes_file):
         """
         Reads the variation file within the PiCalculator object and sets it as
         a pandas Dataframe.
 
-        PiCalculator, Integer, String, String, String -> PiCalculator
+        PiCalculator, Integer, String, String -> PiCalculator
         """
 
         self.bin_size = bin_width
@@ -281,14 +252,7 @@ class PiCalculator:
             os.mkdir(output_dir_path)
 
         print("Setting variant dataframe...\n")
-        self.__set_var_df(
-            bin_width,
-            var_file,
-            scaff_sizes_file,
-            output_dir_path,
-
-        )
-
+        self.__set_in_df(bin_width, var_file, scaff_sizes_file)
         print("Reading scaffold dataframe...\n")
         self.__read_scaff_df(header_out, output_dir_path)
 
