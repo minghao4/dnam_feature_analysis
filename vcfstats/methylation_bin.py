@@ -43,7 +43,7 @@ class MethylationBinner:
         MethylationBinner, String, String -> MethylationBinner
         """
 
-        self.bins_df = read_csv(bin_file, sep = "\t", usecols = [0, 1])
+        self.bins_df = read_csv(bin_file, sep = "\t")
         self.var_methLvl_df = read_csv(methLvl_file, sep = "\t")
 
         scaff_pos = self.var_methLvl_df.columns[0]
@@ -83,7 +83,7 @@ class MethylationBinner:
             else:
                 divide = 1
                 if not sites == 0:
-                    print("Averaging: " + var_scaff)
+                    print("Averaging: " + curr_scaff)
                     divide = sites
 
                 self.bins_df.iloc[bin_idx, 2:] /= divide
@@ -110,6 +110,7 @@ class MethylationBinner:
             print()
             print("Reading: " + curr_scaff + " Bin " + str(curr_bin_lab))
 
+            # TODO: fix this, 200bp is laziness because default bin is 400
             if curr_bin_lab % 200 == 0:
                 lb = curr_bin_lab - 200 + 1
                 ub = curr_bin_lab + 200

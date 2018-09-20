@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+"""
+Helper Functions
+
+"""
+
 import os
 import timeit
 
-"""
-Helpers
-"""
+from pandas import DataFrame as df
+
 
 def remove_trailing_slash(file_paths_list):
     """
@@ -27,6 +31,8 @@ def create_output_directory(output_dir_path):
     String -> None
     """
 
+    print("Creating output directory if it doesn't already exist...")
+    print()
     if not os.path.isdir(output_dir_path):
         os.mkdir(output_dir_path)
 
@@ -59,11 +65,11 @@ def print_program_runtime(program_name, start_time):
     print()
 
 
-def write_output(output_file_name, output_dir_path):
+def write_output(df, output_file_name, output_dir_path):
     """
 
-    String, String -> None
     """
 
     output_file = str(output_dir_path + "/" + output_file_name)
-    self.out_
+    create_output_directory(output_dir_path)
+    df.to_csv(output_file, sep = '\t', index = False)
