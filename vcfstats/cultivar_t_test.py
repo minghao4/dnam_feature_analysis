@@ -4,7 +4,7 @@
 """
 """
 
-import helpers
+from . import helpers
 
 import os
 # import sys
@@ -54,7 +54,7 @@ class PairedTTester:
             vegreville_data = self.vegreville_df.loc[bin_idx][2:]
             model = sps.ttest_rel(vegreville_data, lethbridge_data)
 
-            self.bin_out_df.iloc[bin_idx, 2:] = model
+            self.bin_out_df.iloc[bin_idx, 2:] = model[:]
 
 
     def __cultivar_t_test(self):
@@ -67,7 +67,7 @@ class PairedTTester:
             vegreville_data = self.vegreville_df[cultiv]
             model = sps.ttest_rel(vegreville_data, lethbridge_data)
 
-            self.cultiv_out_df.iloc[cultiv_idx] = model
+            self.cultiv_out_df.iloc[cultiv_idx] = model[:]
 
 
     def paired_t_tests(self, lethbridge_file, vegreville_file, output_dir_path):
@@ -87,7 +87,7 @@ class PairedTTester:
         )
 
         helpers.write_output(
-            self.bin_out_df,
+            self.cultiv_out_df,
             "Within_Variety_Methylation.tsv",
             output_dir_path,
 

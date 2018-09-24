@@ -5,7 +5,8 @@ import sys
 # import vcfstats.vcf_parser as vp
 # import vcfstats.sequence_divergence as sd
 # import vcfstats.pi_regression as pr
-import vcfstats.methylation_bin as mb
+# import vcfstats.methylation_bin as mb
+from vcfstats import global_t_test as gtt
 
 # input_path = sys.argv[1]
 # parser = vp.VcfParser()
@@ -42,12 +43,21 @@ import vcfstats.methylation_bin as mb
 
 # )
 
-bin_file = sys.argv[1]
-lethbridge_methLvl_file = sys.argv[2]
-vegreville_methLvl_file = sys.argv[3]
-lethbridge_output_folder = sys.argv[4]
-vegreville_output_folder = sys.argv[5]
+# bin_file = sys.argv[1]
+# lethbridge_methLvl_file = sys.argv[2]
+# vegreville_methLvl_file = sys.argv[3]
+# lethbridge_output_folder = sys.argv[4]
+# vegreville_output_folder = sys.argv[5]
 
-m_bin = mb.MethylationBinner()
-m_bin.calculate_all_bin_methylation(bin_file, lethbridge_methLvl_file, lethbridge_output_folder)
-m_bin.calculate_all_bin_methylation(bin_file, vegreville_methLvl_file, vegreville_output_folder)
+# m_bin = mb.MethylationBinner()
+# m_bin.calculate_all_bin_methylation(bin_file, lethbridge_methLvl_file, lethbridge_output_folder)
+# m_bin.calculate_all_bin_methylation(bin_file, vegreville_methLvl_file, vegreville_output_folder)
+
+
+lethbridge_methLvl_file = sys.argv[1]
+vegreville_methLvl_file = sys.argv[2]
+output_folder = sys.argv[3]
+
+g_tt = gtt.GlobalTTester()
+g_tt.global_t_testing(lethbridge_methLvl_file, vegreville_methLvl_file, output_folder)
+
