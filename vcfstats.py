@@ -60,4 +60,3 @@ output_folder = sys.argv[3]
 
 g_tt = gtt.GlobalTTester()
 g_tt.global_t_testing(lethbridge_methLvl_file, vegreville_methLvl_file, output_folder)
-

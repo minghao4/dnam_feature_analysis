@@ -11,7 +11,7 @@ import os
 import timeit
 
 from pandas import DataFrame as df
-from pandas import read_csv
+from pandas import read_table
 import scipy.stats as sps
 
 
@@ -31,10 +31,10 @@ class GlobalTTester:
         GlobalTTester, String, String -> GlobalTTester
         """
 
-        self.lethbridge_df = read_csv(lethbridge_file, sep = '\t')
-        self.vegreville_df = read_csv(vegreville_file, sep = '\t')
+        self.lethbridge_df = read_table(lethbridge_file, index_col = 0)
+        self.vegreville_df = read_table(vegreville_file, index_col = 0)
 
-        mean_idx = self.lethbridge_df.columns[1:]
+        mean_idx = self.lethbridge_df.columns
         mean_cols = ["Lethbridge", "Vegreville"]
         self.globalMeans_df = df(index = mean_idx, columns = mean_cols)
 
@@ -89,4 +89,4 @@ class GlobalTTester:
             "Global paired t-test calculations",
             start,
 
-            )
+        )
