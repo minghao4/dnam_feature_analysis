@@ -55,6 +55,7 @@ class MethylationBinner:
         cols = self.var_methLvl_df.columns.tolist()
         cols = cols[(len(cols) - 2):] + cols[0:(len(cols) - 2)]
         self.var_methLvl_df = self.var_methLvl_df[cols]
+        self.var_methLvl_df['Position']
 
         cultivs = cols[2:]
         for cultiv in cultivs:
@@ -90,7 +91,6 @@ class MethylationBinner:
                 break
 
         return bookmark
-
 
 
     def __read_bin_df(self):
