@@ -51,14 +51,14 @@ class PiRegressor:
 
         for bin_idx in range(self.current_scaffold_pi_dna.shape[0]):
             print(
-                helpers.string_builder([
+                helpers.string_builder((
                     "Bin: ", str(self.current_scaffold_pi_dna.loc[bin_idx][0])
-                ])
+                ))
             )
-            scaff_bin_lab = helpers.string_builder([
+            scaff_bin_lab = helpers.string_builder((
                 current_scaffold, "_",
                 str(self.current_scaffold_pi_dna.loc[bin_idx][0])
-            ])
+            ))
             pi_dnam = self.current_scaffold_pi_dnam.loc[bin_idx][1]
             pi_dna = self.current_scaffold_pi_dna.loc[bin_idx][1]
             self.bin_dict.__setitem__(scaff_bin_lab, [pi_dnam, pi_dna])
@@ -76,15 +76,15 @@ class PiRegressor:
 
         for idx in range(self.scaffold_list.shape[0]):
             current_scaffold = str(self.scaffold_list.loc[idx][0])
-            pi_dna_file_path = helpers.string_builder([
+            pi_dna_file_path = helpers.string_builder((
                 dna_dir_path, '/', current_scaffold, "_pi_dna.tsv"
-            ])
-            pi_dnam_file_path = helpers.string_builder([
+            ))
+            pi_dnam_file_path = helpers.string_builder((
                 dnam_dir_path , '/', current_scaffold, "_pi_dnam.tsv"
-            ])
+            ))
 
             print("Setting current scaffold bin data row:")
-            print(helpers.string_builder(["Scaffold: ", current_scaffold]))
+            print(helpers.string_builder(("Scaffold: ", current_scaffold)))
             print()
             self.__set_current_scaffold(
                 current_scaffold, pi_dna_file_path, pi_dnam_file_path

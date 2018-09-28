@@ -26,6 +26,7 @@ from . import helpers
 import os
 # import sys
 import timeit
+from typing import List
 
 import math
 import numpy as np
@@ -103,9 +104,9 @@ class PiCalculator:
         """
         print("Final pi calculations...")
         self.__final_pi_calculation(sites)
-        output_file_name = helpers.string_builder([
+        output_file_name = helpers.string_builder((
             scaffold_name, "_pi_dnam.tsv"
-        ])
+        ))
 
         helpers.write_output(
             self.current_output_df, output_file_name, output_dir_path
@@ -152,7 +153,7 @@ class PiCalculator:
 
 
     def __set_pi_matrix(
-            self, num_bins: int, header: list(str), final_bin_label: float
+            self, num_bins: int, header: List[str], final_bin_label: float
         ) -> None:
         """
         Defines and returns the output pandas DataFrame for a scaffold.
@@ -174,7 +175,7 @@ class PiCalculator:
     # hitting a variant on a different scaffold. Returns a bookmark index and the
     # final number of methylation sites on this scaffold.
     def __read_scaffold_df(
-            self, output_df_header: list(str), output_dir_path: str
+            self, output_df_header: List[str], output_dir_path: str
         ) -> None:
         """
         Processes the scaffold list dataframe.
@@ -206,7 +207,7 @@ class PiCalculator:
     # Main method.
     def calculate_pi_all_scaffolds(
             self, bin_width: int, variation_file_path: str,
-            scaffold_sizes_file_path: str, output_df_header: list(str),
+            scaffold_sizes_file_path: str, output_df_header: List[str],
             output_dir_path: str,
         ) -> None:
         """

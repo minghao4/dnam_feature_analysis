@@ -7,15 +7,16 @@ Helper functions.
 
 import os
 import timeit
+from typing import Tuple, List
 
 import pandas as pd
 
 
-def string_builder(str_list: tuple(str)) -> str:
+def string_builder(str_list: Tuple[str]) -> str:
     return "".join(str_list)
 
 
-def remove_trailing_slash(file_paths_list: list(str)) -> list(str):
+def remove_trailing_slash(file_paths_list: List[str]) -> List[str]:
     """
     """
     for file_path in file_paths_list:
@@ -38,10 +39,10 @@ def write_output(
     ) -> None:
     """
     """
-    output_file = string_builder([output_dir_path, '/', output_file_name])
+    output_file = string_builder((output_dir_path, '/', output_file_name))
     create_output_directory(output_dir_path)
     print()
-    print(string_builder(["Writing ", output_file, " to ", output_dir_path]))
+    print(string_builder(("Writing ", output_file, " to ", output_dir_path)))
     df.to_csv(output_file, sep = '\t', index = False)
 
 
@@ -62,13 +63,13 @@ def print_program_runtime(program_name: str, start_time: float) -> None:
 
     print()
     print("==========")
-    print(string_builder([program_name, " complete."]))
-    print(string_builder(["Raw runtime: ", str(raw_runtime), "s."]))
+    print(string_builder((program_name, " complete.")))
+    print(string_builder(("Raw runtime: ", str(raw_runtime), "s.")))
     print(
-        string_builder([
+        string_builder((
             "Program runtime: ", str(hours), "h ", str(minutes), "m ",
             str(seconds), "s."
-        ])
+        ))
     )
     print("==========")
     print()

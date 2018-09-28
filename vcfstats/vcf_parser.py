@@ -30,6 +30,7 @@ import os
 from subprocess import run, check_output
 # import sys
 import timeit
+from typing import List
 
 import pandas as pd
 from pandas import DataFrame as df
@@ -120,9 +121,9 @@ class VcfParser:
         """
         for i in range(self.current_file.shape[0]):
             row = self.current_file.iloc[i]
-            scaffold_position = helpers.string_builder([
+            scaffold_position = helpers.string_builder((
                 row[0], "_", str(row[1])
-            ])
+            ))
             alternate_allele = row[3]
             variant_frequency = float(row[5].split(":")[2])
             new_dict_entries = self.__row_dict_values(
@@ -148,7 +149,7 @@ class VcfParser:
 
 
     # Sets the output file headers for the output files.
-    def __set_output_df_headers(self, output: str) -> list(str):
+    def __set_output_df_headers(self, output: str) -> List[str]:
         """
         Defines and returns the header for the output files.
         """
@@ -190,23 +191,23 @@ class VcfParser:
         Runs the shell sort command (by version and ignores header) for a given
         file in a directory. Places sorted file in same directory.
         """
-        old_file_path = helpers.string_builder([dir_path, '/', file_name])
-        sorted_file_path = helpers.string_builder([
+        old_file_path = helpers.string_builder((dir_path, '/', file_name))
+        sorted_file_path = helpers.string_builder((
             dir_path, '/', "sorted_", file_name
-        ])
+        ))
 
         # Sorting.
-        cmd = helpers.string_builder([
+        cmd = helpers.string_builder((
             "(head -n 1 ", old_file_path, " && tail -n +2 ", old_file_path,
             " | sort -k1,1V) > ", sorted_file_path
-        ])
+        ))
         check_output(cmd, shell = True)
 
         # Removing the original and renaming the sorted file.
-        cmd = helpers.string_builder([
+        cmd = helpers.string_builder((
             "rm ", old_file_path, " && mv ", sorted_file_path, ' ',
             old_file_path,
-        ])
+        ))
         run(cmd, shell = True, check = True)
 
 
@@ -245,7 +246,7 @@ class VcfParser:
 
             cultivar = file_name.split("_")[0]
             print()
-            print(helpers.string_builder([cultivar, " VCF file:"]))
+            print(helpers.string_builder((cultivar, " VCF file:")))
             print("Reading...")
             self.__read_current_file(vcf_file_path)
             print("Processing...")
@@ -257,7 +258,7 @@ class VcfParser:
         self.__set_variation_output_df()
 
         # Writing to output
-        output_dir_path = helpers.string_builder([vcf_dir_path, '/', "output"])
+        output_dir_path = helpers.string_builder((vcf_dir_path, '/', "output"))
         methylation_file_name = "methylation_levels.tsv"
         helpers.write_output(
             self.methylation_df, methylation_file_name, output_dir_path

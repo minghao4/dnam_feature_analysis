@@ -87,10 +87,10 @@ class MethylationBinner:
                     variant_scaffold, variant_position
                 ):
                 print(
-                    helpers.string_builder([
+                    helpers.string_builder((
                         "Adding: ", variant_scaffold, " Position ",
                         str(variant_position)
-                    ])
+                    ))
                 )
                 sites += 1
                 bookmark += 1
@@ -100,9 +100,9 @@ class MethylationBinner:
                 divide = 1
                 if not sites == 0:
                     print(
-                        helpers.string_builder([
+                        helpers.string_builder((
                             "Averaging: ", currentent_scaffold
-                        ])
+                        ))
                     )
                     divide = sites
 
@@ -125,10 +125,10 @@ class MethylationBinner:
 
             print()
             print(
-                helpers.string_builder([
+                helpers.string_builder((
                     "Reading: ", current_scaffold, " Bin ",
                     str(current_bin_label)
-                ])
+                ))
             )
 
             # TODO: fix this, 200bp is laziness because default bin is 400
@@ -181,5 +181,5 @@ class MethylationBinner:
 
 # mb = MethylationBinner()
 # mb.calculate_all_bin_methylation(
-#   bin_file_path, methylation_file_path, output_dir_path
+#     bin_file_path, methylation_file_path, output_dir_path
 # )
