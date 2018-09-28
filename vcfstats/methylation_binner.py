@@ -4,200 +4,182 @@
 """
 """
 
+from . import helpers
+
 import os
 # import sys
 import timeit
 
 import numpy as np
+import pandas as pd
 from pandas import DataFrame as df
-from pandas import read_csv
 from scipy import stats as sps
 
 
-start = timeit.default_timer()
+start_time = timeit.default_timer()
+# bin_file_path = sys.argv[1]
+# methylation_file_path = sys.argv[2]
+# output_dir_path = sys.argv[3]
 
 
-def var_in_bin(curr_scaff, lb, ub, var_scaff, var_pos):
+class MethylationBinner:
+    def __init__(self):
+        self.methylation_df = None
+        self.bins_output_df = None
+
+
+    def __set_dfs(
+            self, bin_file_path: str, methylation_file_path: str
+        ) -> None:
         """
-
-        String, Integer, Integer, String, Integer -> Boolean
         """
+        self.bins_output_df = pd.read_table(bin_file_path)
+        self.methylation_df = pd.read_table(methylation_file_path)
 
+        scaffold_position = self.methylation_df.columns[0]
+        self.methylation_df[['Scaffold', 'Position']] = \
+            self.methylation_df[scaffold_position].str.split('_', expand = True)
+        self.methylation_df['Position'] = \
+            pd.to_numeric(self.methylation_df['Position'])
+
+        # Reordering the columns.
+        self.methylation_df = self.methylation_df.drop(
+            scaffold_position, axis = 1)
+        cols = self.methylation_df.columns.tolist()
+        cols = cols[(len(cols) - 2):] + cols[0:(len(cols) - 2)]
+        self.methylation_df = self.methylation_df[cols]
+
+        cultivs = cols[2:]
+        for cultiv in cultivs:
+            self.bins_output_df[cultiv] = 0
+
+
+    @staticmethod
+    def __variant_in_bin(
+            currentent_scaffold: str, bin_lower_bound: int, bin_upper_bound: int,
+            variantiant_scaffold: str, variantiant_position: int
+        ) -> bool:
+        """
+        """
         in_bin = False
-        if var_scaff == curr_scaff:
-            if var_pos >= lb and var_pos <= ub:
+        if variantiant_scaffold == currentent_scaffold:
+            if variantiant_position >= bin_lower_bound \
+                    and variantiant_position <= bin_upper_bound:
                 in_bin = True
 
         return in_bin
 
 
-class MethylationBinner:
-    def __init__(self):
-        self.var_methLvl_df = None
-        self.bins_df = None
-
-
-    def __set_in_df(self, bin_file, methLvl_file):
+    def __read_methylation_df(
+            self, bin_idx: int, bookmark: str, currentent_scaffold: str,
+            bin_lower_bound: int, bin_upper_bound: int
+        ) -> int:
         """
-
-        MethylationBinner, String, String -> MethylationBinner
         """
-
-        self.bins_df = read_csv(bin_file, sep = "\t")
-        self.var_methLvl_df = read_csv(methLvl_file, sep = "\t")
-
-        scaff_pos = self.var_methLvl_df.columns[0]
-        self.var_methLvl_df[['Scaffold', 'Position']] = \
-            self.var_methLvl_df[scaff_pos].str.split('_', expand = True)
-
-        # Reordering the columns.
-        self.var_methLvl_df = self.var_methLvl_df.drop(scaff_pos, axis = 1)
-        cols = self.var_methLvl_df.columns.tolist()
-        cols = cols[(len(cols) - 2):] + cols[0:(len(cols) - 2)]
-        self.var_methLvl_df = self.var_methLvl_df[cols]
-        self.var_methLvl_df['Position']
-
-        cultivs = cols[2:]
-        for cultiv in cultivs:
-            self.bins_df[cultiv] = 0
-
-
-    def __read_var_methLvl_df(self, bin_idx, bookmark, curr_scaff, lb, ub):
-        """
-
-        MethylationBinner, Integer, String, Integer, Integer ->
-        MethylationBinner, Integer
-        """
-
         sites = 0
-        for var_idx in range(bookmark, self.var_methLvl_df.shape[0]):
-            var = self.var_methLvl_df.loc[var_idx]
-            var_scaff = var[0]
-            var_pos = int(var[1])
+        for variant_idx in range(bookmark, self.methylation_df.shape[0]):
+            variant = self.methylation_df.loc[variant_idx]
+            variant_scaffold = variant[0]
+            variant_position = variant[1]
 
-            if var_in_bin(curr_scaff, lb, ub, var_scaff, var_pos):
-                print("Adding: " + var_scaff + " Position " + str(var_pos))
+            if self.__variant_in_bin(
+                    currentent_scaffold, bin_lower_bound, bin_upper_bound,
+                    variant_scaffold, variant_position
+                ):
+                print(
+                    helpers.string_builder([
+                        "Adding: ", variant_scaffold, " Position ",
+                        str(variant_position)
+                    ])
+                )
                 sites += 1
                 bookmark += 1
-                self.bins_df.iloc[bin_idx, 2:] += var[2:]
+                self.bins_output_df.iloc[bin_idx, 2:] += variant[2:]
 
             else:
                 divide = 1
                 if not sites == 0:
-                    print("Averaging: " + curr_scaff)
+                    print(
+                        helpers.string_builder([
+                            "Averaging: ", currentent_scaffold
+                        ])
+                    )
                     divide = sites
 
-                self.bins_df.iloc[bin_idx, 2:] /= divide
+                self.bins_output_df.iloc[bin_idx, 2:] /= divide
                 break
 
         return bookmark
 
 
-    def __read_bin_df(self):
+    def __read_bin_df(self) -> None:
         """
-
-        MethylationBinner -> MethylationBinner
         """
-
-        var_methLvl_df_bookmark = 0
-        for bin_idx in range(self.bins_df.shape[0]):
-            curr_bin = self.bins_df.loc[bin_idx]
-            curr_scaff = curr_bin[0]
-            curr_bin_lab = float(curr_bin[1])
-            lb = 0
-            ub = 0
+        methylation_df_bookmark = 0
+        for bin_idx in range(self.bins_output_df.shape[0]):
+            current_bin = self.bins_output_df.loc[bin_idx]
+            current_scaffold = current_bin[0]
+            current_bin_label = float(current_bin[1])
+            bin_lower_bound = 0
+            bin_upper_bound = 0
 
             print()
-            print("Reading: " + curr_scaff + " Bin " + str(curr_bin_lab))
+            print(
+                helpers.string_builder([
+                    "Reading: ", current_scaffold, " Bin ",
+                    str(current_bin_label)
+                ])
+            )
 
             # TODO: fix this, 200bp is laziness because default bin is 400
-            if curr_bin_lab % 200 == 0:
-                lb = curr_bin_lab - 200 + 1
-                ub = curr_bin_lab + 200
+            if current_bin_label % 200 == 0:
+                bin_lower_bound = current_bin_label - 200 + 1
+                bin_upper_bound = current_bin_label + 200
 
             else:
-                lb = curr_bin_lab - curr_bin_lab % 200 + 1
-                ub = curr_bin_lab + curr_bin_lab % 200
+                bin_lower_bound = \
+                    current_bin_label - current_bin_label % 200 + 1
+                bin_upper_bound = current_bin_label + current_bin_label % 200
 
-            var_methLvl_df_bookmark = self.__read_var_methLvl_df(
-                                          bin_idx,
-                                          var_methLvl_df_bookmark,
-                                          curr_scaff,
-                                          lb,
-                                          ub,
+            methylation_df_bookmark = self.__read_methylation_df(
+                bin_idx, methylation_df_bookmark, current_scaffold,
+                bin_lower_bound, bin_upper_bound
+            )
 
-                                      )
-
-            if var_methLvl_df_bookmark == self.var_methLvl_df.shape[0]:
+            if methylation_df_bookmark == self.methylation_df.shape[0]:
                 break
 
 
-    def __write_output(self, output_dir_path):
-        """
-
-        MethylationBinner, String -> MethylationBinner
-        """
-
-        output_file = str(output_dir_path + "/" + "methylation_bins.tsv")
-        print("Creating output directory if it doesn't already exist...")
-        print()
-        if not os.path.isdir(output_dir_path):
-            os.mkdir(output_dir_path)
-
-        self.bins_df.to_csv(output_file, sep = '\t', index = False)
-
-
     def calculate_all_bin_methylation(
-            self,
-            bin_file,
-            methLvl_file,
-            output_dir_path,
-
-        ):
-
+            self, bin_file_path: str, methylation_file_path: str,
+            output_dir_path: str
+        ) -> None:
         """
         Main method.
-
-        MethylationBinner, String, String, String -> MethylationBinner
         """
-
         print()
         print("Start.")
-        print()
-        paths = [bin_file, methLvl_file, output_dir_path]
-        for path in paths:
-            if path.endswith('/'):
-                path = path[:-1]
+        helpers.remove_trailing_slash([
+            bin_file_path, methylation_file_path, output_dir_path
+        ])
 
-        print("Setting input dataframes...")
         print()
-        self.__set_in_df(bin_file, methLvl_file)
+        print("Setting input dataframes...")
+        self.__set_dfs(bin_file_path, methylation_file_path)
 
         print("Calculating average methylation...")
         print()
         self.__read_bin_df()
 
-        print("Writing to output...")
-        print()
-        self.__write_output(output_dir_path)
 
-        raw_runtime = timeit.default_timer() - start
-        runtime = int(raw_runtime)
-        hours = 0
-        minutes = 0
-        seconds = runtime % 60
-        if runtime >= 3600:
-            hours = runtime / 3600
-            minutes = runtime % 3600 / 60
+        helpers.write_output(
+            self.bins_output_df, "methylation_bins.tsv", output_dir_path
+        )
 
-        elif runtime >= 60:
-            minutes = runtime / 60
+        helpers.print_program_runtime("Methylation binning", start_time)
 
-        print()
-        print("==========")
-        print("Methylation binning complete.")
-        print("Raw runtime: " + str(raw_runtime) + "s.")
-        print("Program runtime: " + \
-            str(hours) + "h " + str(minutes) + "m " + str(seconds) + "s.")
-        print("==========")
-        print()
+
+# mb = MethylationBinner()
+# mb.calculate_all_bin_methylation(
+#   bin_file_path, methylation_file_path, output_dir_path
+# )

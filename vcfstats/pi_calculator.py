@@ -34,13 +34,13 @@ from pandas import DataFrame as df
 
 
 # TODO: move this to user interface.
-start = timeit.default_timer()
+start_time = timeit.default_timer()
 
 # bin_width = int(sys.argv[1])
-# var_file = sys.argv[2]
-# scaff_sizes_file = sys.argv[3]
+# variation_file_path = sys.argv[2]
+# scaffold_sizes_file_path = sys.argv[3]
 # output_dir_path = sys.argv[4]
-# header_out = ["#Distance", "Pi"]
+# output_df_header = ["#Distance", "Pi"]
 
 
 # Class specific methods.
@@ -70,7 +70,6 @@ class PiCalculator:
         scaffold_position = self.variation_df.columns[0]
         self.variation_df[['Scaffold', 'Position']] = \
             self.variation_df[scaffold_position].str.split('_', expand = True)
-
         self.variation_df['Position'] = \
             pd.to_numeric(self.variation_df['Position'])
 
@@ -96,17 +95,6 @@ class PiCalculator:
             self.current_output_df.iloc[:, 1] * 2 / divide
 
 
-    def __write_output(self, scaffold_name: str, output_dir_path: str) -> None:
-        """
-        Writes the current output file to disk.
-        """
-
-
-        self.current_output_df.to_csv(
-            output_file_path, sep = '\t', index = False
-        )
-
-
     def __final_calculation_and_write(
             self, scaffold_name: str, sites: int, output_dir_path: str
         ) -> None:
@@ -115,11 +103,13 @@ class PiCalculator:
         """
         print("Final pi calculations...")
         self.__final_pi_calculation(sites)
-        output_file_path = helpers.string_builder([
-            output_dir_path, '/', scaffold_name, "_pi_dnam.tsv"
+        output_file_name = helpers.string_builder([
+            scaffold_name, "_pi_dnam.tsv"
         ])
 
-        helpers.write_output(self.current_output_df, output_file_path)
+        helpers.write_output(
+            self.current_output_df, output_file_name, output_dir_path
+        )
 
 
     # Loops through list of variants, calculates pi, and accumulates number of
@@ -150,21 +140,19 @@ class PiCalculator:
                     pi_part = float(
                         variant_frequency * (1 - variant_frequency) * 24 / 23
                     )
-
                     self.current_output_df.iloc[bin_idx, 1] += pi_part
 
             else:
                 self.__final_calculation_and_write(
                     current_scaffold, sites, output_dir_path
                 )
-
                 break
 
         return (variation_df_bookmark, sites)
 
 
     def __set_pi_matrix(
-            self, num_bins: int, header: tuple(str), final_bin_label: float
+            self, num_bins: int, header: list(str), final_bin_label: float
         ) -> None:
         """
         Defines and returns the output pandas DataFrame for a scaffold.
@@ -226,9 +214,9 @@ class PiCalculator:
         """
         print()
         print("Start.")
-        helpers.remove_trailing_slash(
-            [variation_file_path, scaffold_sizes_file_path, output_dir_path]
-        )
+        helpers.remove_trailing_slash([
+            variation_file_path, scaffold_sizes_file_path, output_dir_path
+        ])
 
         print()
         print("Setting variant dataframe...")
@@ -246,12 +234,8 @@ class PiCalculator:
         )
 
 
-# pi_calc = PiCalculator()
-# pi_calc.calculate_pi_all_scaffolds(
-#     bin_width,
-#     var_file,
-#     scaff_sizes_file,
-#     header_out,
+# pc = PiCalculator()
+# pc.calculate_pi_all_scaffolds(
+#     bin_width, variation_file_path, scaffold_sizes_file_path, output_df_header,
 #     output_dir_path,
-
 # )

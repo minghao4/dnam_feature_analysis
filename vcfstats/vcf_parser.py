@@ -36,7 +36,7 @@ from pandas import DataFrame as df
 
 
 start_time = timeit.default_timer()
-# input_path = sys.argv[1]
+# vcf_file_path = sys.argv[1]
 
 
 class VcfParser:
@@ -104,7 +104,8 @@ class VcfParser:
         if alternate_allele != ".":
             variation_frequency = variant_frequency
 
-            non_issue = ["C", "G", "N"] # Means methylated under BS-seq context.
+            # Means methylated under BS-seq context.
+            non_issue = ["C", "G", "N"]
             if alternate_allele not in non_issue:
                 methylation_level = 1.0 - variant_frequency
 
@@ -122,7 +123,6 @@ class VcfParser:
             scaffold_position = helpers.string_builder([
                 row[0], "_", str(row[1])
             ])
-
             alternate_allele = row[3]
             variant_frequency = float(row[5].split(":")[2])
             new_dict_entries = self.__row_dict_values(
@@ -200,7 +200,6 @@ class VcfParser:
             "(head -n 1 ", old_file_path, " && tail -n +2 ", old_file_path,
             " | sort -k1,1V) > ", sorted_file_path
         ])
-
         check_output(cmd, shell = True)
 
         # Removing the original and renaming the sorted file.
@@ -208,7 +207,6 @@ class VcfParser:
             "rm ", old_file_path, " && mv ", sorted_file_path, ' ',
             old_file_path,
         ])
-
         run(cmd, shell = True, check = True)
 
 
@@ -221,7 +219,6 @@ class VcfParser:
         # TODO: move the stdout printing calls to a user interface file.
         print()
         print("Start.")
-
         helpers.remove_trailing_slash([vcf_dir_path])
 
         # Collecting the names of cultivars into a list.
@@ -265,12 +262,10 @@ class VcfParser:
         helpers.write_output(
             self.methylation_df, methylation_file_name, output_dir_path
         )
-
         variation_file_name = "variant_frequency.tsv"
         helpers.write_output(
             self.variation_df, variation_file_name, output_dir_path
         )
-
         self.__shell_sort_sep(output_dir_path, methylation_file_name)
         self.__shell_sort_sep(output_dir_path, variation_file_name)
 
@@ -280,4 +275,4 @@ class VcfParser:
 
 
 # parser = VcfParser()
-# parser.parse_all_vcfs(input_path)
+# parser.parse_all_vcfs(vcf_file_path)

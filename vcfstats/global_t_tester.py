@@ -10,83 +10,80 @@ import os
 # import sys
 import timeit
 
+import pandas as pd
 from pandas import DataFrame as df
-from pandas import read_table
 import scipy.stats as sps
 
 
-start = timeit.default_timer()
+start_time = timeit.default_timer()
+# lethbridge_file_path = sys.argv[1]
+# vegreville_file_path = sys.argv[2]
+# output_dir_path = sys.argv[3]
 
 class GlobalTTester:
     def __init__(self):
         self.lethbridge_df = None
         self.vegreville_df = None
-        self.globalMeans_df = None
-        self.out_df = None
+        self.global_means_df = None
+        self.output_df = None
 
 
-    def __set_in_df(self, lethbridge_file, vegreville_file):
+    def __set_dfs(
+            self, lethbridge_file_path: str, vegreville_file_path: str
+        ) -> None:
         """
-
-        GlobalTTester, String, String -> GlobalTTester
         """
-
-        self.lethbridge_df = read_table(lethbridge_file, index_col = 0)
-        self.vegreville_df = read_table(vegreville_file, index_col = 0)
+        self.lethbridge_df = pd.read_table(lethbridge_file_path, index_col = 0)
+        self.vegreville_df = pd.read_table(vegreville_file_path, index_col = 0)
 
         mean_idx = self.lethbridge_df.columns
         mean_cols = ["Lethbridge", "Vegreville"]
-        self.globalMeans_df = df(index = mean_idx, columns = mean_cols)
+        self.global_means_df = df(index = mean_idx, columns = mean_cols)
 
         out_idx = ["Global_T_Test"]
         out_cols = ["T_Statistic", "P-Value"]
-        self.out_df = df(index = out_idx, columns = out_cols)
+        self.output_df = df(index = out_idx, columns = out_cols)
 
-        self.globalMeans_df["Lethbridge"] = \
+        self.global_means_df["Lethbridge"] = \
             self.lethbridge_df.mean(axis = 0).values
-
-        self.globalMeans_df["Vegreville"] = \
+        self.global_means_df["Vegreville"] = \
             self.vegreville_df.mean(axis = 0).values
 
 
-    def __global_t_test(self):
+    def __global_t_test(self) -> None:
         """
         """
-
         model = sps.ttest_rel(
-                    self.globalMeans_df["Vegreville"],
-                    self.globalMeans_df["Lethbridge"],
-
-                )
-
-        self.out_df.iloc[0, 0:] = model[:]
+            self.global_means_df["Vegreville"],
+            self.global_means_df["Lethbridge"]
+        )
+        self.output_df.iloc[0, 0:] = model[:]
 
 
     def global_t_testing(
-            self,
-            lethbridge_file,
-            vegreville_file,
-            output_dir_path,
-
-        ):
-
+            self, lethbridge_file_path: str, vegreville_file_path: str,
+            output_dir_path: str,
+        ) -> None:
         """
         Main Method.
-
         """
+        print()
+        print("Start.")
 
-        self.__set_in_df(lethbridge_file, vegreville_file)
+
+        self.__set_dfs(lethbridge_file_path, vegreville_file_path)
         self.__global_t_test()
 
         helpers.write_output(
-            self.out_df,
-            "Global_Methylation_TTest.tsv",
-            output_dir_path,
-
+            self.output_df, "Global_Methylation_TTest.tsv", output_dir_path
         )
 
         helpers.print_program_runtime(
-            "Global paired t-test calculations",
-            start,
-
+            "Global paired t-test calculations", start_time
         )
+
+
+# gtt = GlobalTTester()
+# gtt.global_t_testing(
+#     lethbridge_file_path, vegreville_file_path, output_dir_path
+# )
