@@ -5,11 +5,20 @@
 Helper functions.
 """
 
-import os
-import timeit
+from .__init__ import os, timeit, pd
+
 from typing import Tuple, List
 
-import pandas as pd
+
+def significance(model: list) -> bool:
+    """
+    """
+    significance = False
+    if model[0] != 0 and model[1] != 0:
+        if model[1] <= 0.05:
+            significance = True
+
+    return significance
 
 
 def string_builder(str_list: Tuple[str]) -> str:

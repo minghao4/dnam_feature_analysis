@@ -10,14 +10,9 @@ The residual becomes the DNAm sequence divergence independent of the effects of
 DNA sequence divergence.
 """
 
+from .__init__ import timeit, df, pd
 from . import helpers
 
-import os
-# import sys
-import timeit
-
-import pandas as pd
-from pandas import DataFrame as df
 import statsmodels.formula.api as smf
 
 

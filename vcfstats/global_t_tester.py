@@ -4,21 +4,15 @@
 """
 """
 
+from .__init__ import timeit, df, pd, sps
 from . import helpers
-
-import os
-# import sys
-import timeit
-
-import pandas as pd
-from pandas import DataFrame as df
-import scipy.stats as sps
 
 
 start_time = timeit.default_timer()
 # lethbridge_file_path = sys.argv[1]
 # vegreville_file_path = sys.argv[2]
 # output_dir_path = sys.argv[3]
+
 
 class GlobalTTester:
     def __init__(self):

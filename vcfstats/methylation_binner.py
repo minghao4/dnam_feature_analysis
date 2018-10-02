@@ -4,16 +4,8 @@
 """
 """
 
+from .__init__ import timeit, np, df, pd, sps
 from . import helpers
-
-import os
-# import sys
-import timeit
-
-import numpy as np
-import pandas as pd
-from pandas import DataFrame as df
-from scipy import stats as sps
 
 
 start_time = timeit.default_timer()

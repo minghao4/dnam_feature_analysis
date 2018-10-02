@@ -24,16 +24,11 @@ the biscuit VCF outputs require manual preprocessing prior to input into this
 tool.
 """
 
+from .__init__ import os, timeit, df, pd
 from . import helpers
 
-import os
 from subprocess import run, check_output
-# import sys
-import timeit
 from typing import List
-
-import pandas as pd
-from pandas import DataFrame as df
 
 
 start_time = timeit.default_timer()
