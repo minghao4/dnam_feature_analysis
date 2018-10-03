@@ -4,11 +4,11 @@
 """
 """
 
-from .__init__ import timeit, np, df, pd, sps
+from .__init__ import timeit, Tuple, np, df, pd, sps
 from . import helpers
 
 # import sys
-from typing import Tuple
+
 
 start_time = timeit.default_timer()
 # bin_file_path = sys.argv[1]
@@ -31,19 +31,10 @@ class MethylationBinner:
         self.methylation_df = pd.read_table(methylation_file_path)
 
         scaffold_position = self.methylation_df.columns[0]
-        self.methylation_df[['Scaffold', 'Position']] = \
+        self.methylation_df[["Scaffold", "Position"]] = \
             self.methylation_df[scaffold_position].str.split('_', expand = True)
-        self.methylation_df['Position'] = \
-            pd.to_numeric(self.methylation_df['Position'])
-        print()
-        print("*****")
-        print(
-            helpers.string_builder((
-                "Variants: ", str(self.methylation_df.shape[0])
-            ))
-        )
-        print("*****")
-        print()
+        self.methylation_df["Position"] = \
+            pd.to_numeric(self.methylation_df["Position"])
 
         # Reordering the columns.
         self.methylation_df = self.methylation_df.drop(
@@ -160,11 +151,6 @@ class MethylationBinner:
             )
             methylation_df_bookmark = bookmark_sites[0]
             sites = bookmark_sites[1]
-            print()
-            print("-----")
-            print(methylation_df_bookmark)
-            print("-----")
-            print()
 
             if methylation_df_bookmark == self.methylation_df.shape[0]:
                 break
@@ -179,19 +165,21 @@ class MethylationBinner:
         """
         Main method.
         """
-        print()
-        print("Start.")
+        print(helpers.string_builder(('\n', "Start.")))
         helpers.remove_trailing_slash([
             bin_file_path, methylation_file_path, output_dir_path
         ])
 
-        print()
-        print("Setting input dataframes...")
+        print(helpers.string_builder(('\n', "Setting input dataframes...")))
         self.__set_dfs(bin_file_path, methylation_file_path)
         # sys.exit()
 
         print("Calculating average methylation...")
-        print()
+        print(
+            helpers.string_builder((
+                "Calculating average methylation...",'\n'
+            ))
+        )
         self.__read_bin_df()
 
 
