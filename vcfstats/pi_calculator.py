@@ -21,51 +21,56 @@ The input parameters required are as follows:
 * Output directory path.
 """
 
-from .__init__ import timeit, df, math, np, pd
+from .__init__ import timeit, Tuple, df, math, np, pd
 from . import helpers
 
-from typing import List
+# import sys
 
 
 # TODO: move this to user interface.
 start_time = timeit.default_timer()
-
 # bin_width = int(sys.argv[1])
-# variation_file_path = sys.argv[2]
-# scaffold_sizes_file_path = sys.argv[3]
-# output_dir_path = sys.argv[4]
-# output_df_header = ["#Distance", "Pi"]
+# alleles = int(sys.argv[2])
+# variation_file_path = sys.argv[3]
+# scaffold_sizes_file_path = sys.argv[4]
+# output_dir_path = sys.argv[5]
+output_df_header = ("#Distance", "Pi")
 
 
-# Class specific methods.
 class PiCalculator:
     def __init__(self):
         self.bin_size = 0
+        self.alleles = 0
         self.variation_df = None
         self.scaffold_sizes_df = None
         self.current_output_df = None
 
 
-    # Reads the input variation file as a dataframe.
+    # Sets input dataframes.
     def __set_input_dfs(
-            self, bin_width: int, variation_file_path: str,
+            self, bin_width: int, alleles: int, variation_file_path: str,
             scaffold_sizes_file_path: str
         ) -> None:
         """
-        Reads the variation file within the PiCalculator object and sets it as
-        a pandas Dataframe.
+        Sets bin width and cultivars/alleles; reads input files and sets as
+        pandas dataframes.
         """
         self.bin_size = bin_width
+        self.alleles = alleles
+
+        # Only read scaffold_position and variation frequency information from
+        # variation file.
         self.variation_df = pd.read_table(
             variation_file_path,
-            usecols = ['#Scaffold_Position', 'Variation_Frequency']
+            usecols = ["#Scaffold_Position", "Variation_Frequency"]
         )
 
+        # Split scaffold and position into separate columns.
         scaffold_position = self.variation_df.columns[0]
-        self.variation_df[['Scaffold', 'Position']] = \
+        self.variation_df[["Scaffold", "Position"]] = \
             self.variation_df[scaffold_position].str.split('_', expand = True)
-        self.variation_df['Position'] = \
-            pd.to_numeric(self.variation_df['Position'])
+        self.variation_df["Position"] = \
+            pd.to_numeric(self.variation_df["Position"])
 
         # Reordering the columns.
         self.variation_df = self.variation_df.drop(scaffold_position, axis = 1)
@@ -73,32 +78,36 @@ class PiCalculator:
         cols = cols[1:] + [cols[0]]
         self.variation_df = self.variation_df[cols]
 
-        self.scaffold_sizes_df = pd.read_table(scaffold_sizes_file_path.ap)
+        # Read scaffold sizes file.
+        self.scaffold_sizes_df = pd.read_table(scaffold_sizes_file_path)
 
 
     # Final part of the pi calculation.
     def __final_pi_calculation(self, sites: int) -> None:
         """
-        Performs the final pi calculation step.
+        Divides the pi value by the number of sites.
         """
         divide = sites
         if sites == 0:
             divide = 1
 
+        # divide = self.bin_size
         self.current_output_df.iloc[:, 1] = \
             self.current_output_df.iloc[:, 1] * 2 / divide
 
 
+    # Final part of pi calculation and writing to output.
     def __final_calculation_and_write(
             self, scaffold_name: str, sites: int, output_dir_path: str
         ) -> None:
         """
         Combined final pi calculation and output writing.
         """
+        print()
         print("Final pi calculations...")
         self.__final_pi_calculation(sites)
         output_file_name = helpers.string_builder((
-            scaffold_name, "_pi_dnam.tsv"
+            scaffold_name, "_pi_dnam.tsv" # "_pi_dna.tsv"
         ))
 
         helpers.write_output(
@@ -113,7 +122,7 @@ class PiCalculator:
     def __read_variation_df(
             self, variation_df_bookmark: int, current_scaffold: str,
             num_bins: int, output_dir_path: str
-        ) -> tuple(int, bool):
+        ) -> Tuple[int, bool]:
         """
         Processes the variation dataframe.
         """
@@ -130,9 +139,9 @@ class PiCalculator:
                 bin_idx = int(variant_position / self.bin_size)
 
                 if bin_idx < num_bins:
-                    # TODO: pipe in number of cultivars
                     pi_part = float(
-                        variant_frequency * (1 - variant_frequency) * 24 / 23
+                        variant_frequency * (1 - variant_frequency) * \
+                            self.alleles / (self.alleles - 1)
                     )
                     self.current_output_df.iloc[bin_idx, 1] += pi_part
 
@@ -145,11 +154,12 @@ class PiCalculator:
         return (variation_df_bookmark, sites)
 
 
+    # Sets the output pi matrix.
     def __set_pi_matrix(
-            self, num_bins: int, header: List[str], final_bin_label: float
+            self, num_bins: int, header: Tuple[str], final_bin_label: float
         ) -> None:
         """
-        Defines and returns the output pandas DataFrame for a scaffold.
+        Defines and returns the output pandas dataframe for a scaffold.
         """
         self.current_output_df = \
             ((np.arange(num_bins * 2).reshape(num_bins, 2) + 1) * \
@@ -158,9 +168,9 @@ class PiCalculator:
         self.current_output_df[:, 1] *= 0
         self.current_output_df = df(self.current_output_df, columns = header)
 
-        out_dfRows = self.current_output_df.shape[0]
-        if out_dfRows > 1:
-            self.current_output_df.loc[out_dfRows - 1][0] = final_bin_label
+        num_rows = self.current_output_df.shape[0]
+        if num_rows > 1 and final_bin_label != 0:
+            self.current_output_df.loc[num_rows - 1][0] = final_bin_label
 
 
     # Loops through list of scaffolds, sets bins, calculates pi, and
@@ -168,7 +178,7 @@ class PiCalculator:
     # hitting a variant on a different scaffold. Returns a bookmark index and the
     # final number of methylation sites on this scaffold.
     def __read_scaffold_df(
-            self, output_df_header: List[str], output_dir_path: str
+            self, output_df_header: Tuple[str], output_dir_path: str
         ) -> None:
         """
         Processes the scaffold list dataframe.
@@ -177,19 +187,24 @@ class PiCalculator:
         for idx in range(self.scaffold_sizes_df.shape[0]):
             scaffold = self.scaffold_sizes_df.iloc[idx]
             scaffold_name = scaffold[0]
-            print("Currently reading: " + scaffold_name)
+            print(
+                helpers.string_builder((
+                    '\n', "Currently reading: ", scaffold_name
+                ))
+            )
 
             scaffold_size = int(scaffold[1])
             num_bins = math.ceil(scaffold_size / self.bin_size)
-            final_bin_label = int((scaffold_size % self.bin_size) / 2) + \
-                (self.bin_size * (num_bins - 1))
+            final_bin_label = int((scaffold_size % self.bin_size) / 2)
+            if final_bin_label != 0:
+                final_bin_label += self.bin_size * (num_bins - 1)
 
             self.__set_pi_matrix(num_bins, output_df_header, final_bin_label)
             variation_df_bookmark_and_sites = self.__read_variation_df(
                 variation_df_bookmark, scaffold_name, num_bins, output_dir_path
             )
 
-            variation_df_bookmark= variation_df_bookmark_and_sites[0]
+            variation_df_bookmark = variation_df_bookmark_and_sites[0]
             sites = variation_df_bookmark_and_sites[1]
             if variation_df_bookmark == self.variation_df.shape[0]:
                 self.__final_calculation_and_write(
@@ -199,26 +214,24 @@ class PiCalculator:
 
     # Main method.
     def calculate_pi_all_scaffolds(
-            self, bin_width: int, variation_file_path: str,
-            scaffold_sizes_file_path: str, output_df_header: List[str],
+            self, bin_width: int, alleles: int, variation_file_path: str,
+            scaffold_sizes_file_path: str, output_df_header: Tuple[str],
             output_dir_path: str,
         ) -> None:
         """
         Main method.
         """
-        print()
-        print("Start.")
+        print(helpers.string_builder(('\n', "Start.")))
         helpers.remove_trailing_slash([
             variation_file_path, scaffold_sizes_file_path, output_dir_path
         ])
 
-        print()
-        print("Setting variant dataframe...")
+        print(helpers.string_builder(('\n', "Setting variant dataframe...")))
         self.__set_input_dfs(
-            bin_width, variation_file_path, scaffold_sizes_file_path
+            bin_width, alleles, variation_file_path, scaffold_sizes_file_path
         )
 
-        print("Reading scaffold dataframe...")
+        print(helpers.string_builder(('\n', "Reading scaffold dataframe...")))
         self.__read_scaffold_df(output_df_header, output_dir_path)
 
         # Runtime.
@@ -230,6 +243,6 @@ class PiCalculator:
 
 # pc = PiCalculator()
 # pc.calculate_pi_all_scaffolds(
-#     bin_width, variation_file_path, scaffold_sizes_file_path, output_df_header,
-#     output_dir_path,
+#     bin_width, alleles, variation_file_path, scaffold_sizes_file_path,
+#     output_df_header, output_dir_path
 # )

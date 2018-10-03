@@ -7,6 +7,8 @@
 from .__init__ import timeit, np, df, pd, sps
 from . import helpers
 
+# import sys
+from typing import Tuple
 
 start_time = timeit.default_timer()
 # bin_file_path = sys.argv[1]
@@ -33,6 +35,15 @@ class MethylationBinner:
             self.methylation_df[scaffold_position].str.split('_', expand = True)
         self.methylation_df['Position'] = \
             pd.to_numeric(self.methylation_df['Position'])
+        print()
+        print("*****")
+        print(
+            helpers.string_builder((
+                "Variants: ", str(self.methylation_df.shape[0])
+            ))
+        )
+        print("*****")
+        print()
 
         # Reordering the columns.
         self.methylation_df = self.methylation_df.drop(
@@ -48,24 +59,41 @@ class MethylationBinner:
 
     @staticmethod
     def __variant_in_bin(
-            currentent_scaffold: str, bin_lower_bound: int, bin_upper_bound: int,
-            variantiant_scaffold: str, variantiant_position: int
+            current_scaffold: str, bin_lower_bound: int, bin_upper_bound: int,
+            variant_scaffold: str, variant_position: int
         ) -> bool:
         """
         """
         in_bin = False
-        if variantiant_scaffold == currentent_scaffold:
-            if variantiant_position >= bin_lower_bound \
-                    and variantiant_position <= bin_upper_bound:
+        if variant_scaffold == current_scaffold:
+            if variant_position >= bin_lower_bound \
+                    and variant_position <= bin_upper_bound:
                 in_bin = True
 
         return in_bin
 
 
+    def __bin_averaging(
+            self, sites: int, current_scaffold: str, bin_idx: int
+        ) -> None:
+        """
+        """
+        divide = 1
+        if not sites == 0:
+            print(
+                helpers.string_builder((
+                    "Averaging: ", current_scaffold
+                ))
+            )
+            divide = sites
+
+        self.bins_output_df.iloc[bin_idx, 2:] /= divide
+
+
     def __read_methylation_df(
-            self, bin_idx: int, bookmark: str, currentent_scaffold: str,
+            self, bin_idx: int, bookmark: str, current_scaffold: str,
             bin_lower_bound: int, bin_upper_bound: int
-        ) -> int:
+        ) -> Tuple[int, int]:
         """
         """
         sites = 0
@@ -75,7 +103,7 @@ class MethylationBinner:
             variant_position = variant[1]
 
             if self.__variant_in_bin(
-                    currentent_scaffold, bin_lower_bound, bin_upper_bound,
+                    current_scaffold, bin_lower_bound, bin_upper_bound,
                     variant_scaffold, variant_position
                 ):
                 print(
@@ -89,25 +117,17 @@ class MethylationBinner:
                 self.bins_output_df.iloc[bin_idx, 2:] += variant[2:]
 
             else:
-                divide = 1
-                if not sites == 0:
-                    print(
-                        helpers.string_builder((
-                            "Averaging: ", currentent_scaffold
-                        ))
-                    )
-                    divide = sites
-
-                self.bins_output_df.iloc[bin_idx, 2:] /= divide
+                self.__bin_averaging(sites, current_scaffold, bin_idx)
                 break
 
-        return bookmark
+        return (bookmark, sites)
 
 
     def __read_bin_df(self) -> None:
         """
         """
         methylation_df_bookmark = 0
+        sites = 0
         for bin_idx in range(self.bins_output_df.shape[0]):
             current_bin = self.bins_output_df.loc[bin_idx]
             current_scaffold = current_bin[0]
@@ -131,15 +151,25 @@ class MethylationBinner:
             else:
                 bin_lower_bound = \
                     current_bin_label - current_bin_label % 200 + 1
-                bin_upper_bound = current_bin_label + current_bin_label % 200
+                bin_upper_bound = \
+                    current_bin_label + current_bin_label % 200 + 1
 
-            methylation_df_bookmark = self.__read_methylation_df(
+            bookmark_sites = self.__read_methylation_df(
                 bin_idx, methylation_df_bookmark, current_scaffold,
                 bin_lower_bound, bin_upper_bound
             )
+            methylation_df_bookmark = bookmark_sites[0]
+            sites = bookmark_sites[1]
+            print()
+            print("-----")
+            print(methylation_df_bookmark)
+            print("-----")
+            print()
 
             if methylation_df_bookmark == self.methylation_df.shape[0]:
                 break
+
+        self.__bin_averaging(sites, current_scaffold, bin_idx)
 
 
     def calculate_all_bin_methylation(
@@ -158,6 +188,7 @@ class MethylationBinner:
         print()
         print("Setting input dataframes...")
         self.__set_dfs(bin_file_path, methylation_file_path)
+        # sys.exit()
 
         print("Calculating average methylation...")
         print()

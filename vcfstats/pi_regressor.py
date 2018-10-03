@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Simple regression analysis for DNA and DNAm pi.
+Simple linear regression analysis for DNA and DNAm pi.
 
 Pi_DNAm ~ Pi_DNA + e
 
@@ -13,13 +13,14 @@ DNA sequence divergence.
 from .__init__ import timeit, df, pd
 from . import helpers
 
+# import sys
+
 import statsmodels.formula.api as smf
 
 
 # TODO: move this to user interface.
 start_time = timeit.default_timer()
 output_df_header = ["Scaff_Bin", "Pi_DNAm", "Pi_DNA", "True_Pi_DNAm"]
-
 # scaffold_list_file_path = sys.argv[1]
 # dna_dir_path = sys.argv[2]
 # dnam_dir_path = sys.argv[3]
@@ -78,9 +79,12 @@ class PiRegressor:
                 dnam_dir_path , '/', current_scaffold, "_pi_dnam.tsv"
             ))
 
-            print("Setting current scaffold bin data row:")
-            print(helpers.string_builder(("Scaffold: ", current_scaffold)))
-            print()
+            print(
+                helpers.string_builder((
+                    "Setting current scaffold bin data row:", '\n',
+                    "Scaffold: ", current_scaffold, '\n'
+                ))
+            )
             self.__set_current_scaffold(
                 current_scaffold, pi_dna_file_path, pi_dnam_file_path
             )
@@ -95,15 +99,13 @@ class PiRegressor:
 
         # Regression
         model = smf.ols('Pi_DNAm ~ Pi_DNA', data = self.output_df).fit()
-        print()
-        print(" Model Summary:")
-        print()
+        print(helpers.string_builder(('\n', "Model Summary:", '\n')))
         print(model.summary())
         print(model.pvalues)
         self.output_df["True_Pi_DNAm"] = model.resid
 
         scaff_bin = self.output_df.columns
-        self.output_df[['Scaffold', 'Bin_Label']] = \
+        self.output_df[["Scaffold", "Bin_Label"]] = \
             self.output_df[scaff_bin[0]].str.split('_', expand = True)
 
         self.output_df = self.output_df.drop(scaff_bin[0], axis = 1)
@@ -119,21 +121,18 @@ class PiRegressor:
         """
         Main method.
         """
-        print()
-        print("Start.")
+        print(helpers.string_builder(('\n', "Start.")))
         helpers.remove_trailing_slash([
             scaffold_list_file_path, dna_dir_path, dnam_dir_path,
             output_dir_path
         ])
 
-        print()
-        print("Reading scaffold list...")
+        print(helpers.string_builder(('\n', "Reading scaffold list...")))
         self.__read_scaffold_list(
             scaffold_list_file_path, dna_dir_path, dnam_dir_path
         )
 
-        print()
-        print("Setting output dataframe...")
+        print(helpers.string_builder(('\n', "Setting output dataframe...")))
         self.__set_output_df()
 
         helpers.write_output(
@@ -145,7 +144,7 @@ class PiRegressor:
         helpers.print_program_runtime("Pi Regression calculations", start_time)
 
 
-# pi_rg = pr.PiRegressor()
+# pi_rg = PiRegressor()
 # pi_rg.pi_regression(
 #     scaffold_list_file_path, dna_dir_path, dnam_dir_path, output_dir_path
 # )

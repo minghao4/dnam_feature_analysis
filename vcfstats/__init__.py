@@ -7,9 +7,10 @@
 
 import os
 import timeit
+from typing import List, Tuple
 
-from pandas import DataFrame as df
 import math
 import numpy as np
 import pandas as pd
+from pandas import DataFrame as df
 import scipy.stats as sps
