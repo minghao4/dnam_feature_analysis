@@ -48,9 +48,7 @@ class PhenotypeRegressionOutput:
         self.phenotype_output_df = None
 
 
-    def __set_output_dfs(
-            self, methylation_input_df: pd.DataFrame
-        ) -> None:
+    def __set_output_dfs(self, methylation_input_df: pd.DataFrame) -> None:
         """
         """
         self.current_bin_df = df(
@@ -190,11 +188,9 @@ def phenotype_methylation_regression(
     for process in outputs:
         process.join()
 
-    helpers.print_program_runtime(
-        "Phenotype regression analyses", start_time
-    )
+    helpers.print_program_runtime("Phenotype regression analyses", start_time)
 
 
 # phenotype_methylation_regression(
-#     delta_methylation_file_path, delta_methylation_file_path, output_dir_path
+#     delta_phenotype_file_path, delta_methylation_file_path, output_dir_path
 # )

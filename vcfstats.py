@@ -7,8 +7,8 @@ import sys
 # import vcfstats.pi_regression as pr
 # import vcfstats.methylation_binner as mb
 # from vcfstats import global_t_test as gtt
-# from vcfstats import cultivar_t_tester as ctt
-from vcfstats import phenotype_regressor as pmr
+from vcfstats import cultivar_t_tester as ctt
+# from vcfstats import phenotype_regressor as pmr
 
 # input_path = sys.argv[1]
 # parser = vp.VcfParser()
@@ -60,17 +60,16 @@ from vcfstats import phenotype_regressor as pmr
 # g_tt = gtt.GlobalTTester()
 # g_tt.global_t_testing(lethbridge_methLvl_file, vegreville_methLvl_file, output_folder)
 
-# lethbridge_file_path = sys.argv[1]
-# vegreville_file_path = sys.argv[2]
-# output_dir_path = sys.argv[3]
-
-# c_tt = ctt.PairedTTester()
-# c_tt.paired_t_tests(lethbridge_file_path, vegreville_file_path, output_dir_path)
-
-delta_phenotype_file_path = sys.argv[1]
-delta_methylation_file_path = sys.argv[2]
+lethbridge_file_path = sys.argv[1]
+vegreville_file_path = sys.argv[2]
 output_dir_path = sys.argv[3]
 
-pmr.phenotype_methylation_regression(
-    delta_phenotype_file_path, delta_methylation_file_path, output_dir_path
-)
+ctt.paired_t_tests(lethbridge_file_path, vegreville_file_path, output_dir_path)
+
+# delta_phenotype_file_path = sys.argv[1]
+# delta_methylation_file_path = sys.argv[2]
+# output_dir_path = sys.argv[3]
+
+# pmr.phenotype_methylation_regression(
+#     delta_phenotype_file_path, delta_methylation_file_path, output_dir_path
+# )
