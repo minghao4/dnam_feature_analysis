@@ -99,6 +99,7 @@ class VcfParser:
         if alternate_allele != ".":
             variation_frequency = variant_frequency
 
+            # TODO: potentially problematic, address with genotypes
             # Means methylated under BS-seq context.
             non_issue = ["C", "G", "N"]
             if alternate_allele not in non_issue:
