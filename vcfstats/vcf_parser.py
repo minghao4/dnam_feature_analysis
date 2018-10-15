@@ -85,7 +85,8 @@ class VcfParser:
     # Biscuit output VCF.
     @staticmethod
     def __row_dict_values(
-            alternate_allele: str, variant_frequency: float
+            reference_allele: str, alternate_allele: str,
+            variant_frequency: float
         ) -> Tuple[float, float]:
         """
         Defines and returns the methylation and variation dictionary entries
@@ -99,10 +100,12 @@ class VcfParser:
         if alternate_allele != ".":
             variation_frequency = variant_frequency
 
-            # TODO: potentially problematic, address with genotypes
-            # Means methylated under BS-seq context.
-            non_issue = ["C", "G", "N"]
-            if alternate_allele not in non_issue:
+            methylation_bases = ['C', 'G']
+            if (reference_allele not in methylation_bases) and \
+                    (alternate_allele in methylation_bases):
+                methylation_level = variant_frequency
+
+            elif alternate_allele != 'N':
                 methylation_level = 1.0 - variant_frequency
 
         return (methylation_level, variation_frequency)
@@ -119,10 +122,11 @@ class VcfParser:
             scaffold_position = helpers.string_builder((
                 row[0], "_", str(row[1])
             ))
+            reference_allele = row[2]
             alternate_allele = row[3]
             variant_frequency = float(row[5].split(":")[2])
             new_dict_entries = self.__row_dict_values(
-                alternate_allele, variant_frequency
+                reference_allele, alternate_allele, variant_frequency
             )
 
             new_entries_needed = False
