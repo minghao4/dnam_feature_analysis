@@ -35,7 +35,7 @@ class GlobalTTester:
         self.global_means_df = df(index = mean_idx, columns = mean_cols)
 
         out_idx = ["Global_T_Test"]
-        out_cols = ["T_Statistic", "P-Value"]
+        out_cols = ["T_Statistic", "P_Value", "Methylation_Ratio"]
         self.output_df = df(index = out_idx, columns = out_cols)
 
         self.global_means_df["Lethbridge"] = \
@@ -51,7 +51,10 @@ class GlobalTTester:
             self.global_means_df["Vegreville"],
             self.global_means_df["Lethbridge"]
         )
-        self.output_df.iloc[0, 0:] = model[:]
+        self.output_df.iloc[0, 0:2] = model[:]
+        self.output_df.iloc[0, 2] = self.vegreville_df.sum(axis = 0).sum() / \
+            self.lethbridge_df.sum(axis = 0).sum()
+        self.output_df.index = ["global"]
 
 
     def global_t_testing(
@@ -61,15 +64,12 @@ class GlobalTTester:
         """
         Main Method.
         """
-        print()
-        print("Start.")
-
-
+        print(helpers.string_builder(('\n', "Start.")))
         self.__set_dfs(lethbridge_file_path, vegreville_file_path)
         self.__global_t_test()
 
         helpers.write_output(
-            self.output_df, "Global_Methylation_TTest.tsv", output_dir_path
+            self.output_df, "global_methylation_ttest.tsv", output_dir_path
         )
 
         helpers.print_program_runtime(

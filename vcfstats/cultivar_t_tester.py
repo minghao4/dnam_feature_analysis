@@ -43,6 +43,7 @@ class LocalPairedTTestOutput:
         self.bins_output_df = methylation_input_df.iloc[:, 0:2]
         self.bins_output_df["T_Statistic"] = 0
         self.bins_output_df["P_Value"] = 1
+        self.bins_output_df["Methylation_Ratio"] = 1
         self.bins_output_df["Significant?"] = False
 
 
@@ -66,12 +67,16 @@ class LocalPairedTTestOutput:
                 model = sps.ttest_rel(vegreville_data, lethbridge_data)
                 significant = helpers.significance(model)
                 self.bins_output_df.iloc[bin_idx, 2:4] = model[:]
-                self.bins_output_df.iloc[bin_idx, 4] = significant
+                methylation_ratio = vegreville_data.sum() / \
+                    lethbridge_data.sum()
+                self.bins_output_df.iloc[bin_idx, 4] = methylation_ratio
+                self.bins_output_df.iloc[bin_idx, 5] = significant
                 print(
                     helpers.string_builder((
                         '\n', "++++++++++", '\n', quick_search, '\n',
                         "T_Statistic: ", str(model[0]), '\n', "P_Value: ",
-                        str(model[1]), '\n', '\n', "++++++++++", '\n'
+                        str(model[1]), '\n', "Methylation_Ratio: ",
+                        methylation_ratio, '\n', '\n', "++++++++++", '\n'
                     ))
                 )
 
@@ -103,7 +108,7 @@ class LocalPairedTTestOutput:
         self.__local_t_test(lethbridge_input_df, vegreville_input_df)
 
         helpers.write_output(
-            self.bins_output_df, "cross_variety_methylation.tsv",
+            self.bins_output_df, "cross_variety_methylation_ttest.tsv",
             output_dir_path
         )
         sys.stdout.close()
@@ -120,9 +125,12 @@ class CultivarPairedTTestOutput:
         self.cultivars_output_df = df(
             data = 0,
             index = methylation_input_df.columns[2:],
-            columns = ["T_Statistic", "P_Value", "Significant?"]
+            columns = [
+                "T_Statistic", "P_Value", "Methylation_Ratio" "Significant?"
+            ]
         )
         self.cultivars_output_df["P_Value"] = 1
+        self.cultivars_output_df["Methylation_Ratio"] = 1
         self.cultivars_output_df["Significant?"] = False
 
 
@@ -142,16 +150,17 @@ class CultivarPairedTTestOutput:
             lethbridge_data = lethbridge_input_df[cultivar]
             vegreville_data = vegreville_input_df[cultivar]
             model = sps.ttest_rel(vegreville_data, lethbridge_data)
-            # model = remove_inf(
-            #     sps.ttest_rel(vegreville_data, lethbridge_data)
-            # )
             significant = helpers.significance(model)
             self.cultivars_output_df.iloc[cultivar_idx, 0:2] = model[:]
-            self.cultivars_output_df.iloc[cultivar_idx, 2] = significant
+            methylation_ratio = vegreville_data.sum() / \
+                    lethbridge_data.sum()
+            self.cultivars_output_df.iloc[cultivar_idx, 2] = methylation_ratio
+            self.cultivars_output_df.iloc[cultivar_idx, 3] = significant
             print(
                 helpers.string_builder((
                     "T_Statistic: ", str(model[0]), '\n', "P_Value: ",
-                    str(model[1]), '\n', '\n', "++++++++++", '\n'
+                    str(model[1]), '\n', "Methylation_Ratio: ",
+                    methylation_ratio, '\n', '\n', "++++++++++", '\n'
                 ))
             )
 
@@ -175,7 +184,7 @@ class CultivarPairedTTestOutput:
         self.__cultivar_t_test(lethbridge_input_df, vegreville_input_df)
 
         helpers.write_output(
-            self.cultivars_output_df, "within_variety_methylation.tsv",
+            self.cultivars_output_df, "within_variety_methylation_ttest.tsv",
             output_dir_path
         )
         sys.stdout.close()

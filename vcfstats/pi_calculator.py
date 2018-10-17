@@ -198,6 +198,8 @@ class PiCalculator:
             final_bin_label = int((scaffold_size % self.bin_size) / 2)
             if final_bin_label != 0:
                 final_bin_label += self.bin_size * (num_bins - 1)
+            elif scaffold_size % self.bin_size == 1:
+                final_bin_label == scaffold_size
 
             self.__set_pi_matrix(num_bins, output_df_header, final_bin_label)
             variation_df_bookmark_and_sites = self.__read_variation_df(
