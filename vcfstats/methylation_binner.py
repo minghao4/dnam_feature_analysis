@@ -165,23 +165,17 @@ class MethylationBinner:
         """
         Main method.
         """
-        print(helpers.string_builder(('\n', "Start.")))
-        helpers.remove_trailing_slash([
-            bin_file_path, methylation_file_path, output_dir_path
-        ])
-
-        print(helpers.string_builder(('\n', "Setting input dataframes...")))
-        self.__set_dfs(bin_file_path, methylation_file_path)
-        # sys.exit()
-
-        print("Calculating average methylation...")
-        print(
-            helpers.string_builder((
-                "Calculating average methylation...",'\n'
+        print("\nStart.")
+        bin_file_path, methylation_file_path, output_dir_path = \
+            helpers.remove_trailing_slash((
+                bin_file_path, methylation_file_path, output_dir_path
             ))
-        )
-        self.__read_bin_df()
 
+        print("\nSetting input dataframes...")
+        self.__set_dfs(bin_file_path, methylation_file_path)
+
+        print("\nCalculating average methylation...\n")
+        self.__read_bin_df()
 
         helpers.write_output(
             self.bins_output_df, "methylation_bins.tsv", output_dir_path

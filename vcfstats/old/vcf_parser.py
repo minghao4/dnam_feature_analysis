@@ -24,8 +24,8 @@ the biscuit VCF outputs require manual preprocessing prior to input into this
 tool.
 """
 
-from ..__init__ import List, os, timeit, Tuple, df, pd
-from ... import helpers
+from .__init__ import List, os, timeit, Tuple, df, pd
+from . import helpers
 
 from subprocess import run, check_output
 

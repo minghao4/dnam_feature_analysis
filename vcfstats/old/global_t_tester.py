@@ -27,8 +27,14 @@ class GlobalTTester:
         ) -> None:
         """
         """
-        self.lethbridge_df = pd.read_table(lethbridge_file_path, index_col = 0)
-        self.vegreville_df = pd.read_table(vegreville_file_path, index_col = 0)
+        self.lethbridge_df = pd.read_table(lethbridge_file_path)
+        self.vegreville_df = pd.read_table(vegreville_file_path)
+        self.lethbridge_df.drop(
+            ["#Scaffold", "Bin_Label"], axis = 1, inplace = True
+        )
+        self.vegreville_df.drop(
+            ["#Scaffold", "Bin_Label"], axis = 1, inplace = True
+        )
 
         mean_idx = self.lethbridge_df.columns
         mean_cols = ["Lethbridge", "Vegreville"]
@@ -36,7 +42,7 @@ class GlobalTTester:
 
         out_idx = ["Global_T_Test"]
         out_cols = ["T_Statistic", "P_Value", "Methylation_Ratio"]
-        self.output_df = df(index = out_idx, columns = out_cols)
+        self.output_df = df(index = out_idx, columns = out_cols, data = 0)
 
         self.global_means_df["Lethbridge"] = \
             self.lethbridge_df.mean(axis = 0).values
@@ -47,16 +53,20 @@ class GlobalTTester:
     def __global_t_test(self) -> None:
         """
         """
+        # Setting paired T-test results.
         model = sps.ttest_rel(
             self.global_means_df["Vegreville"],
             self.global_means_df["Lethbridge"]
         )
         self.output_df.iloc[0, 0:2] = model[:]
-        self.output_df.iloc[0, 2] = self.vegreville_df.sum(axis = 0).sum() / \
-            self.lethbridge_df.sum(axis = 0).sum()
+
+        # Setting methylation ratio.
+        self.output_df.iloc[0, 2] = self.vegreville_df.sum().sum() / \
+            self.lethbridge_df.sum().sum()
         self.output_df.index = ["global"]
 
 
+    # Main method.
     def global_t_testing(
             self, lethbridge_file_path: str, vegreville_file_path: str,
             output_dir_path: str,
@@ -64,7 +74,7 @@ class GlobalTTester:
         """
         Main Method.
         """
-        print(helpers.string_builder(('\n', "Start.")))
+        print("\nStart.")
         self.__set_dfs(lethbridge_file_path, vegreville_file_path)
         self.__global_t_test()
 
