@@ -7,7 +7,7 @@ Helper functions.
 
 from .__init__ import os, timeit, pd
 
-from typing import Tuple, List
+from typing import List, Tuple
 
 
 def significance(model: list) -> bool:
@@ -25,7 +25,7 @@ def string_builder(str_list: Tuple[str]) -> str:
     return "".join(str_list)
 
 
-def remove_trailing_slash(file_paths_list: List[str]) -> List[str]:
+def remove_trailing_slash(file_paths_list: Tuple[str]) -> Tuple[str]:
     """
     """
     for file_path in file_paths_list:
@@ -44,7 +44,8 @@ def create_output_directory(output_dir_path: str) -> None:
 
 
 def write_output(
-        df: pd.DataFrame, output_file_name: str, output_dir_path: str
+        output_df: pd.DataFrame, output_file_name: str, output_dir_path: str,
+        write_index: bool = False
     ) -> None:
     """
     """
@@ -52,7 +53,7 @@ def write_output(
     create_output_directory(output_dir_path)
     print()
     print(string_builder(("Writing ", output_file, " to ", output_dir_path)))
-    df.to_csv(output_file, sep = '\t', index = False)
+    output_df.to_csv(output_file, sep = '\t', index = write_index)
 
 
 def print_program_runtime(program_name: str, start_time: float) -> None:
@@ -64,21 +65,21 @@ def print_program_runtime(program_name: str, start_time: float) -> None:
     minutes = 0
     seconds = runtime % 60
     if runtime >= 3600:
-        hours = runtime / 3600
-        minutes = runtime % 3600 / 60
+        hours = int(runtime / 3600)
+        minutes = int(runtime % 3600 / 60)
 
     elif runtime >= 60:
-        minutes = runtime / 60
+        minutes = int(runtime / 60)
 
-    print()
-    print("==========")
-    print(string_builder((program_name, " complete.")))
-    print(string_builder(("Raw runtime: ", str(raw_runtime), "s.")))
-    print(
-        string_builder((
-            "Program runtime: ", str(hours), "h ", str(minutes), "m ",
-            str(seconds), "s."
-        ))
-    )
-    print("==========")
-    print()
+    # Looks like this:
+    #
+    # ==========
+    # (Output text)
+    # ==========
+    #
+    wrapping_flair = string_builder(('\n', '=' * 10, '\n'))
+    print(string_builder((
+            wrapping_flair, program_name, " complete.\n", "Raw runtime: ",
+            str(raw_runtime), "s.\n", "Program runtime: ", str(hours), "h ",
+            str(minutes), "m ", str(seconds), "s.\n", wrapping_flair
+    )))
