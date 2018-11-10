@@ -17,11 +17,11 @@ Inputs:
 Outputs:
 - Log TXT stdout files.
 - TSV file holding paired T-test results (t-value, p-value, methylation ratio,
-  nominal significance).
+  nominal significance) for each set of paired T-tests.
 
 """
 
-from .__init__ import List, multiprocessing, sys, timeit, math, pd, df, sps
+from .__init__ import List, multiprocessing, sys, timeit, math, df, pd, sps
 from . import helpers
 
 
@@ -128,17 +128,17 @@ class LocalPairedTTestOutput:
 
 
     # def __local_t_test(
-    #         self, lethbridge_input_df: pd.DataFrame,
-    #         vegreville_input_df: pd.DataFrame
-    #     ) -> None:
-    #     """
-    #     Perform cross-cultivar paired T-tests.
-    #     """
-    #     tmp = self.bins_output_df.apply(
-    #         self.__iter_bins, axis = 1,
-    #         args = (lethbridge_input_df, vegreville_input_df)
-    #     )
-    #     del tmp
+        #     self, lethbridge_input_df: pd.DataFrame,
+        #     vegreville_input_df: pd.DataFrame
+        # ) -> None:
+        # """
+        # Perform cross-cultivar paired T-tests.
+        # """
+        # tmp = self.bins_output_df.apply(
+        #     self.__iter_bins, axis = 1,
+        #     args = (lethbridge_input_df, vegreville_input_df)
+        # )
+        # del tmp
         # for bin_idx in range(self.bins_output_df.shape[0]):
         #     bin_row = self.bins_output_df.loc[bin_idx]
         #     scaffold = bin_row[0]
@@ -283,16 +283,16 @@ class CultivarPairedTTestOutput:
 
 
     # def __cultivar_t_test(
-    #         self, lethbridge_input_df: pd.DataFrame,
-    #         vegreville_input_df: pd.DataFrame
-    #     ) -> None:
-    #     """
-    #     """
-    #     tmp = self.cultivars_output_df.apply(
-    #         self.__iter_cultivars, axis = 1,
-    #         args = (lethbridge_input_df, vegreville_input_df)
-    #     )
-    #     del tmp
+        #     self, lethbridge_input_df: pd.DataFrame,
+        #     vegreville_input_df: pd.DataFrame
+        # ) -> None:
+        # """
+        # """
+        # tmp = self.cultivars_output_df.apply(
+        #     self.__iter_cultivars, axis = 1,
+        #     args = (lethbridge_input_df, vegreville_input_df)
+        # )
+        # del tmp
         # for cultivar_idx in range(self.cultivars_output_df.shape[0]):
         #     cultivar = self.cultivars_output_df.iloc[cultivar_idx, :].name
         #     print(
@@ -358,6 +358,7 @@ class GlobalPairedTTestOutput:
 
     def __set_output_dfs(self, cultivars: pd.Index) -> None:
         """
+        Set global output dataframes..
         """
         self.global_means_df = df(
             index = cultivars, columns = ["Lethbridge", "Vegreville"], data = 0
@@ -373,6 +374,7 @@ class GlobalPairedTTestOutput:
             vegreville_input_df: pd.DataFrame
         ) -> None:
         """
+        Perform global paired T-test.
         """
         # Dropping non-data columns
         vegreville_input_df.drop(
@@ -433,8 +435,9 @@ def paired_t_tests(
         output_dir_path: str
     ) -> None:
     """
-    Performs cross-cultivar and within-cultivar paired T-tests for Lethbridge
-    and Vegreville data in parallel using the `multiprocessing` module.
+    Performs cross-cultivar, within-cultivar, and global paired T-tests for
+    Lethbridge and Vegreville data in parallel using the `multiprocessing`
+    module.
     """
     start_time = timeit.default_timer() # Initialize starting time.
     lethbridge_file_path, vegreville_file_path, output_dir_path = \

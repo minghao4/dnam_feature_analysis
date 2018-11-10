@@ -19,7 +19,7 @@ Output Columns:
 """
 
 from .__init__ import multiprocessing, List, sys, timeit, Tuple, natsorted, \
-    pd, df
+    df, pd
 from . import helpers
 
 
