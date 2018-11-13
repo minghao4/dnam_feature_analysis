@@ -2,7 +2,7 @@
 
 ## Usage
 
-``` python
+``` text
 
 python dnam_feature_analysis/
 usage:  [-h] [-bc lethbridge_directory vegreville_directory]
