@@ -135,7 +135,7 @@ class PhenotypeRegressionOutput:
         bin_df_index = methylation_df.columns[2:]
         tmp = methylation_df.apply(
             self.__iter_bin_regression,
-            args = (phenotype_data, phenotype_label, bin_df_index)
+            args = (phenotype_data, phenotype_label, bin_df_index), axis = 1
         )
         del tmp
 

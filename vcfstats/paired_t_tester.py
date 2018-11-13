@@ -242,7 +242,7 @@ class CultivarPairedTTestOutput:
             cultivar: str
         ) -> None:
         """
-        Performed paired T-test between cultivar data.
+        Perform paired T-test between cultivar data.
         """
         model = sps.ttest_rel(vegreville_data, lethbridge_data)
         significant = helpers.significance(model)

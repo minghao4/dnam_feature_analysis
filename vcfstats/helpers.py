@@ -23,7 +23,7 @@ def significance(model: Tuple[float]) -> bool:
 
 def string_builder(str_list: Tuple[str]) -> str:
     """
-    Build strings.
+    Build strings separate by whitespace.
     """
     return "".join(str_list)
 
@@ -77,12 +77,6 @@ def print_program_runtime(program_name: str, start_time: float) -> None:
     elif runtime >= 60:
         minutes = int(runtime / 60)
 
-    # Looks like this:
-    #
-    # ==========
-    # (Output text)
-    # ==========
-    #
     wrapping_flair = string_builder(('\n', '=' * 10, '\n'))
     print(string_builder((
             wrapping_flair, program_name, " complete.\n", "Raw runtime: ",
