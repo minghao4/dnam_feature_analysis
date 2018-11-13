@@ -15,7 +15,7 @@ Bin size 400bp as shortest scaffolds are 400bp long.
 
 """
 
-from .__init__ import List, timeit, df, math, np, pd
+from . import List, timeit, df, math, np, pd
 from . import helpers
 
 file_header = ["#Scaffold", "Bin_Label"]

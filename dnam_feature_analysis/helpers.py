@@ -6,7 +6,7 @@ Helper functions.
 
 """
 
-from .__init__ import List, os, Tuple, timeit, pd
+from . import List, os, Tuple, timeit, pd
 
 
 def significance(model: Tuple[float]) -> bool:

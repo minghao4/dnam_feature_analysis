@@ -1,13 +1,14 @@
 from setuptools import setup
 
 setup(
-    name = "vcfstats",
-    version = "alpha",
-    description = "No description is available at this time???",
+    name = "dnam_feature_analysis",
+    version = "1.0.0",
+    description = \
+        "DNA Methylation Feature Analysis of Lethbridge and Vegreville Plants",
     author = "Minghao Li",
     author_email = "minghao.li1@ucalgary.ca",
     license = "MIT",
-    packages = ["vcfstats"],
+    packages = ["dnam_feature_analysis"],
     zip_safe = False
 
 )

@@ -17,7 +17,7 @@ Outputs:
 
 """
 
-from .__init__ import multiprocessing, sys, timeit, warnings, df, pd, smf, sps
+from . import multiprocessing, sys, timeit, warnings, df, pd, smf, sps
 from . import helpers
 
 

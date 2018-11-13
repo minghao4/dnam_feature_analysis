@@ -16,7 +16,7 @@ Note - this needs to be run once for Lethbridge and once for Vegreville.
 
 """
 
-from .__init__ import sys, timeit, Tuple, np, df, pd, sps
+from . import sys, timeit, Tuple, np, df, pd, sps
 from . import helpers
 
 

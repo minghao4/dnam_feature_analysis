@@ -21,7 +21,7 @@ Outputs:
 
 """
 
-from .__init__ import List, multiprocessing, sys, timeit, math, df, pd, sps
+from . import List, multiprocessing, sys, timeit, math, df, pd, sps
 from . import helpers
 
 

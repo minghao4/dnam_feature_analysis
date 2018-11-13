@@ -1,3 +1,4 @@
 .vscode
 .settings
-
+.old
+__pycache__

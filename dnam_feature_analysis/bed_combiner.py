@@ -18,8 +18,7 @@ Output Columns:
 
 """
 
-from .__init__ import multiprocessing, List, sys, timeit, Tuple, natsorted, \
-    df, pd
+from . import multiprocessing, List, sys, timeit, Tuple, natsorted, df, pd
 from . import helpers
 
 
